@@ -1,7 +1,7 @@
 "use client";
 import Icon from "@/shared/components/Icon";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import PropTypes from "prop-types";
@@ -143,10 +143,47 @@ const getPageInfo = (pathname) => {
 
 export default function Header({ onMenuClick, showMenuButton = true }) {
   const pathname = usePathname();
+  const [displayName, setDisplayName] = useState("");
+  const [loginMethod, setLoginMethod] = useState("");
 
   // Memoize page info to prevent unnecessary recalculations
   const pageInfo = useMemo(() => getPageInfo(pathname), [pathname]);
   const { title, description, icon, breadcrumbs } = pageInfo;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAuthStatus() {
+      try {
+        const res = await fetch("/api/auth/status", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setDisplayName(data?.displayName || data?.samlName || data?.samlEmail || data?.oidcName || data?.oidcEmail || "");
+          setLoginMethod(data?.loginMethod || "");
+        }
+      } catch {
+        if (!cancelled) {
+          setDisplayName("");
+          setLoginMethod("");
+        }
+      }
+    }
+
+    loadAuthStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) window.location.assign("/login");
+    } catch (error) {
+      console.error("Failed to logout:", error);
+    }
+  };
 
   return (
     <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
@@ -221,10 +258,22 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
+        {displayName && (loginMethod === "OIDC" || loginMethod === "SAML") && (
+          <div
+            className="hidden sm:flex items-center max-w-[220px] px-3 py-1.5 rounded-full border border-border bg-surface/70 text-xs text-text-muted truncate"
+            title={displayName}
+          >
+            <Icon name="account_circle" className="text-[14px] mr-1.5 text-primary" />
+            <span className="truncate">{displayName}</span>
+            <span className="ml-2 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {loginMethod}
+            </span>
+          </div>
+        )}
         <HeaderSearch />
         <ThemeToggle />
         <HeaderLanguage />
-        <HeaderMenu />
+        <HeaderMenu onLogout={handleLogout} />
       </div>
     </header>
   );

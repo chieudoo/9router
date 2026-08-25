@@ -23,8 +23,22 @@ const DEFAULT_SETTINGS = {
     audioInput: { enabled: true, roundRobin: false, models: [] },
     videoInput: { enabled: false, roundRobin: false, models: [] },
   },
+  requireLogin: true,
   requireApiKey: true,
   tunnelDashboardAccess: true,
+  authMode: "password",
+  ssoType: "oidc",
+  oidcIssuerUrl: "",
+  oidcClientId: "",
+  oidcClientSecret: "",
+  oidcScopes: "openid profile email",
+  oidcLoginLabel: "Sign in with OIDC",
+  samlEntryPoint: "",
+  samlIssuer: "urn:9router:sp",
+  samlCert: "",
+  samlLoginLabel: "Sign in with SAML SSO",
+  samlAttributeEmail: "email",
+  samlAttributeName: "name",
   enableObservability: false,
   observabilityMaxRecords: 1000,
   observabilityBatchSize: 20,
@@ -72,7 +86,7 @@ export function mergeWithDefaults(raw) {
 
 export async function getSettings() {
   const raw = await readRaw();
-  return mergeWithDefaults(stripDashboardAuthSettings(raw));
+  return mergeWithDefaults(raw);
 }
 
 // Atomic read-merge-write inside transaction (prevents losing concurrent updates)
@@ -82,13 +96,13 @@ export async function updateSettings(updates) {
   db.transaction(function () {
     const row = db.get(`SELECT data FROM settings WHERE id = 1`);
     const current = row ? parseJson(row.data, {}) : {};
-    next = { ...stripDashboardAuthSettings(current), ...updates };
+    next = { ...current, ...updates };
     db.run(
       `INSERT INTO settings(id, data) VALUES(1, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data`,
       [stringifyJson(next)],
     );
   });
-  return mergeWithDefaults(stripDashboardAuthSettings(next));
+  return mergeWithDefaults(next);
 }
 
 export async function isCloudEnabled() {
@@ -107,27 +121,5 @@ export async function getCloudUrl() {
 }
 
 export async function exportSettings() {
-  return stripDashboardAuthSettings(await readRaw());
-}
-
-function stripDashboardAuthSettings(settings) {
-  const {
-    password,
-    requireLogin,
-    authMode,
-    ssoType,
-    oidcIssuerUrl,
-    oidcClientId,
-    oidcClientSecret,
-    oidcScopes,
-    oidcLoginLabel,
-    samlEntryPoint,
-    samlIssuer,
-    samlCert,
-    samlLoginLabel,
-    samlAttributeEmail,
-    samlAttributeName,
-    ...rest
-  } = settings || {};
-  return rest;
+  return await readRaw();
 }

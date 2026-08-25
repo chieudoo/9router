@@ -12,23 +12,33 @@ const execAsync = promisify(exec);
 const getConfigDir = () => path.join(os.homedir(), ".config", "opencode");
 const getConfigPath = () => path.join(getConfigDir(), "opencode.json");
 
-// Check if opencode CLI is installed (via which/where or config file exists)
-const checkOpenCodeInstalled = async () => {
+const findOpenCodeCommands = async () => {
+  const isWindows = os.platform() === "win32";
+  const command = isWindows ? "where" : "which";
+  const env = isWindows
+    ? { ...process.env, PATH: `${process.env.APPDATA}\\npm;${process.env.PATH}` }
+    : process.env;
+  const find = async (name) => {
+    try {
+      const { stdout } = await execAsync(`${command} ${name}`, { windowsHide: true, env });
+      return stdout.trim().split(/\r?\n/).filter(Boolean);
+    } catch {
+      return [];
+    }
+  };
+
+  const [opencode, opencode2] = await Promise.all([find("opencode"), find("opencode2")]);
+  return { opencode, opencode2 };
+};
+
+// Check if an OpenCode command is installed, or if its config already exists.
+const checkOpenCodeInstalled = async (commands) => {
+  if (commands.opencode.length || commands.opencode2.length) return true;
   try {
-    const isWindows = os.platform() === "win32";
-    const command = isWindows ? "where opencode" : "which opencode";
-    const env = isWindows
-      ? { ...process.env, PATH: `${process.env.APPDATA}\\npm;${process.env.PATH}` }
-      : process.env;
-    await execAsync(command, { windowsHide: true, env });
+    await fs.access(getConfigPath());
     return true;
   } catch {
-    try {
-      await fs.access(getConfigPath());
-      return true;
-    } catch {
-      return false;
-    }
+    return false;
   }
 };
 
@@ -56,11 +66,13 @@ const has9RouterConfig = (config) => {
 // GET - Check opencode CLI and read current settings
 export async function GET() {
   try {
-    const isInstalled = await checkOpenCodeInstalled();
+    const commands = await findOpenCodeCommands();
+    const isInstalled = await checkOpenCodeInstalled(commands);
 
     if (!isInstalled) {
       return NextResponse.json({
         installed: false,
+        commands,
         config: null,
         message: "OpenCode CLI is not installed",
       });
@@ -75,6 +87,7 @@ export async function GET() {
       config,
       has9Router: has9RouterConfig(config),
       configPath: getConfigPath(),
+      commands,
         opencode: {
           models: Object.keys(modelMap),
           activeModel: config?.model?.startsWith("9router/") ? config.model.replace(/^9router\//, "") : null,

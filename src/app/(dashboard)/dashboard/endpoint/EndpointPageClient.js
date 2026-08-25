@@ -27,7 +27,9 @@ export default function APIPageClient({ machineId }) {
   const [confirmState, setConfirmState] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
- const [tunnelDashboardAccess, setTunnelDashboardAccess] = useState(false);
+  const [requireLogin, setRequireLogin] = useState(true);
+  const [hasPassword, setHasPassword] = useState(true);
+  const [tunnelDashboardAccess, setTunnelDashboardAccess] = useState(false);
 
  // Cloudflare Tunnel state
   const [tunnelChecking, setTunnelChecking] = useState(true);
@@ -84,6 +86,12 @@ export default function APIPageClient({ machineId }) {
   }, []);
 
   const { copied, copy } = useCopyToClipboard();
+
+  // Do not expose a dashboard remotely until access requires a custom password.
+  const isLoginUnsafe = !requireLogin || !hasPassword;
+  const unsafeReason = !requireLogin
+    ? "Enable \"Require login\" and set a custom password before activating the tunnel."
+    : "Change the default dashboard password before activating the tunnel.";
 
   // Auto-scroll install log
   useEffect(() => {
@@ -194,6 +202,8 @@ export default function APIPageClient({ machineId }) {
       if (settingsRes.ok) {
         const data = await settingsRes.json();
         setRequireApiKey(data.requireApiKey || false);
+        setRequireLogin(data.requireLogin !== false);
+        setHasPassword(data.hasPassword || false);
         setTunnelDashboardAccess(data.tunnelDashboardAccess || false);
       }
       if (statusRes.ok) {
@@ -803,6 +813,10 @@ export default function APIPageClient({ machineId }) {
                 size="sm"
                 icon="cloud_upload"
                 onClick={() => {
+                  if (isLoginUnsafe) {
+                    setTunnelStatus({ type: "error", message: `Security required: ${unsafeReason}` });
+                    return;
+                  }
                   if (!requireApiKey) {
                     setTunnelStatus({ type: "error", message: "Security required: Enable \"Require API key\" before activating the tunnel." });
                     return;
@@ -886,6 +900,10 @@ export default function APIPageClient({ machineId }) {
                 size="sm"
                 icon="vpn_lock"
                 onClick={() => {
+                  if (isLoginUnsafe) {
+                    setTsStatus({ type: "error", message: `Security required: ${unsafeReason}` });
+                    return;
+                  }
                   handleOpenTsModal();
                 }}
                 className="bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white!"
@@ -896,6 +914,15 @@ export default function APIPageClient({ machineId }) {
           </div>
         </div>
 
+        {isLoginUnsafe && !tunnelEnabled && !tsEnabled && (
+          <div className="mt-4">
+            <SecurityWarning
+              message={unsafeReason}
+              action={{ label: "Open settings", href: "/dashboard/profile" }}
+            />
+          </div>
+        )}
+
         {/* Security warnings when tunnel or tailscale is active */}
         {(tunnelEnabled || tsEnabled) && (
           <div className="mt-4 flex flex-col gap-2">
@@ -903,6 +930,19 @@ export default function APIPageClient({ machineId }) {
               <SecurityWarning
                 message="Require API key is disabled — your endpoint is publicly accessible without authentication."
                 action={{ label: "Enable", href: "#require-api-key" }}
+              />
+            )}
+            {(!requireLogin || !hasPassword) && (
+              <SecurityWarning
+                message={
+                  !requireLogin
+                    ? "Require login is disabled — anyone can access your dashboard via tunnel."
+                    : "Dashboard uses the default password — change it in Profile settings."
+                }
+                action={{
+                  label: !requireLogin ? "Enable" : "Change password",
+                  href: "/dashboard/profile",
+                }}
               />
             )}
           </div>
