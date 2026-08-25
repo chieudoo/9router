@@ -2,9 +2,16 @@
 
 import { useEffect, useRef } from "react";
 
+const pendingGetRequests = new Map();
+const GET_DEDUPLICATION_WINDOW_MS = 1000;
+
 function isDashboardApiRequest(input) {
   const url = typeof input === "string" ? input : input.url;
   return new URL(url, window.location.href).pathname.startsWith("/api/");
+}
+
+function getRequestMethod(input, init) {
+  return init?.method || (input instanceof Request ? input.method : "GET");
 }
 
 export function DashboardRequestScope({ children }) {
@@ -13,6 +20,7 @@ export function DashboardRequestScope({ children }) {
   const cancel = () => {
     controllerRef.current.abort();
     controllerRef.current = new AbortController();
+    pendingGetRequests.clear();
   };
 
   useEffect(() => {
@@ -23,7 +31,27 @@ export function DashboardRequestScope({ children }) {
       const signal = requestSignal
         ? AbortSignal.any([requestSignal, controllerRef.current.signal])
         : controllerRef.current.signal;
-      return originalFetch(input, { ...init, signal });
+      if (getRequestMethod(input, init).toUpperCase() !== "GET" || requestSignal) {
+        return originalFetch(input, { ...init, signal });
+      }
+
+      const url = new URL(typeof input === "string" ? input : input.url, window.location.href).href;
+      let pending = pendingGetRequests.get(url);
+      if (!pending) {
+        pending = originalFetch(input, { ...init, signal });
+        pendingGetRequests.set(url, pending);
+        pending.then(
+          () => {
+            setTimeout(() => {
+              if (pendingGetRequests.get(url) === pending) pendingGetRequests.delete(url);
+            }, GET_DEDUPLICATION_WINDOW_MS);
+          },
+          () => {
+            if (pendingGetRequests.get(url) === pending) pendingGetRequests.delete(url);
+          },
+        );
+      }
+      return pending.then((response) => response.clone());
     };
     const cancelForDashboardNavigation = (event) => {
       const link = event.target.closest("a[href]");
@@ -33,7 +61,6 @@ export function DashboardRequestScope({ children }) {
     };
     document.addEventListener("click", cancelForDashboardNavigation, true);
     return () => {
-      controllerRef.current.abort();
       window.fetch = originalFetch;
       document.removeEventListener("click", cancelForDashboardNavigation, true);
     };
