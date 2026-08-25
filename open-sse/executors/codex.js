@@ -114,6 +114,27 @@ function normalizeCodexTools(body) {
   }
 }
 
+// OpenCode2 beta documents sessionID as optional for a new subagent, but sends
+// the parent ID when the field is advertised. Omit it so the client creates a child.
+function relaxOpenCodeSubagentSchema(body, headers) {
+  if (!headers?.["x-opencode-session"] || !Array.isArray(body.tools)) return;
+  for (const tool of body.tools) {
+    if (tool?.type !== "function" || tool.name !== "subagent") continue;
+    const parameters = tool.parameters;
+    if (!parameters || typeof parameters !== "object") continue;
+    const properties = parameters.properties;
+    if (!properties || typeof properties !== "object" || !("sessionID" in properties)) continue;
+    const { sessionID, ...nextProperties } = properties;
+    tool.parameters = {
+      ...parameters,
+      properties: nextProperties,
+      ...(Array.isArray(parameters.required)
+        ? { required: parameters.required.filter((name) => name !== "sessionID") }
+        : {}),
+    };
+  }
+}
+
 // Resolve prompt-cache session id: client session → assistant-text-hash → workspaceId → connection
 function resolveCacheSessionId(body, credentials) {
   return resolveSessionId({
@@ -410,6 +431,7 @@ export class CodexExecutor extends BaseExecutor {
     stripStoredItemReferences(body);
     // Flatten function tools + drop unsupported types
     normalizeCodexTools(body);
+    relaxOpenCodeSubagentSchema(body, credentials?.rawHeaders);
 
     // Ensure streaming is enabled (Codex API requires it)
     body.stream = true;

@@ -57,6 +57,24 @@ describe("resolveSessionId", () => {
     expect(got).toBe("client-sess-123");
   });
 
+  it("keeps OpenCode parent and child sessions distinct", () => {
+    const parent = resolveSessionId({
+      headers: { "x-opencode-session": "ses_parent" },
+      body: bodyWithUserOnly,
+      connectionId: "conn1",
+      scope: "codex",
+    });
+    const child = resolveSessionId({
+      headers: { "x-opencode-session": "ses_child" },
+      body: bodyWithUserOnly,
+      connectionId: "conn1",
+      scope: "codex",
+    });
+
+    expect(parent).toBe("ses_parent");
+    expect(child).toBe("ses_child");
+  });
+
   it("does not treat request-scoped x-client-request-id as a session override", () => {
     const first = resolveSessionId({
       headers: { "x-client-request-id": "req-1" },

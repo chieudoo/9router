@@ -137,4 +137,34 @@ describe("CodexExecutor tool normalization", () => {
       },
     ]);
   });
+
+  it("lets OpenCode create a new subagent without supplying sessionID", () => {
+    const tools = [{
+      type: "function",
+      name: "subagent",
+      parameters: {
+        type: "object",
+        properties: {
+          agent: { type: "string" },
+          sessionID: { type: "string" },
+        },
+        required: ["agent", "sessionID"],
+      },
+    }];
+    const body = {
+      model: "gpt-5.5",
+      input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "probe" }] }],
+      tools,
+      stream: true,
+    };
+
+    new CodexExecutor().transformRequest("gpt-5.5", body, true, {
+      connectionId: "test-codex-tools",
+      providerSpecificData: {},
+      rawHeaders: { "x-opencode-session": "ses_parent" },
+    });
+
+    expect(body.tools[0].parameters.required).toEqual(["agent"]);
+    expect(body.tools[0].parameters.properties.sessionID).toBeUndefined();
+  });
 });
