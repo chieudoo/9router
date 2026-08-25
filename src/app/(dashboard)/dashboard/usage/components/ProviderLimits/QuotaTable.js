@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { useEffect, useMemo, useState } from "react";
 import { formatResetTime, getRemainingPercentage } from "./utils";
@@ -234,9 +235,7 @@ export default function QuotaTable({
                   title="Hide this quota row"
                   aria-label={`Hide quota ${quota.name}`}
                 >
-                  <span className="material-symbols-outlined text-[15px]">
-                    visibility_off
-                  </span>
+                  <Icon name="visibility_off" className="text-[15px]" />
                 </button>
               )}
             </div>

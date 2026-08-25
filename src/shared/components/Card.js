@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -26,8 +27,8 @@ export default function Card({
     <div
       className={cn(
         "bg-surface border border-border-subtle",
-        elev ? "rounded-[14px] shadow-[var(--shadow-elev)]" : "rounded-[14px] shadow-[var(--shadow-soft)]",
-        hover && "hover:shadow-[var(--shadow-warm)] hover:border-brand-500/30 transition-all cursor-pointer",
+        elev ? "rounded-[14px] shadow-(--shadow-elev)" : "rounded-[14px] shadow-(--shadow-soft)",
+        hover && "hover:shadow-(--shadow-warm) hover:border-brand-500/30 transition-all cursor-pointer",
         paddings[padding],
         className
       )}
@@ -38,7 +39,7 @@ export default function Card({
           <div className="flex items-center gap-3">
             {icon && (
               <div className="p-2 rounded-[10px] bg-bg text-text-muted">
-                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+                <Icon name={icon} className="text-[20px]" />
               </div>
             )}
             <div>

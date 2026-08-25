@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -43,13 +44,13 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+        <Icon name="progress_activity" className="animate-spin text-[18px]" />
       ) : icon ? (
-        <span className="material-symbols-outlined text-[18px]">{icon}</span>
+        <Icon name={icon} className="text-[18px]" />
       ) : null}
       {children}
       {iconRight && !loading && (
-        <span className="material-symbols-outlined text-[18px]">{iconRight}</span>
+        <Icon name={iconRight} className="text-[18px]" />
       )}
     </button>
   );

@@ -53,7 +53,6 @@ async function runNativeCodexRequest(model, reasoning) {
     headroomEnabled: false,
     cavemanEnabled: false,
     ponytailEnabled: false,
-    pxpipeEnabled: false,
     sourceFormatOverride: "openai-responses",
     clientRawRequest: {
       endpoint: "/v1/responses",

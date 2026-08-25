@@ -72,29 +72,15 @@ const normalize = (value) => {
   }
 };
 
-/**
- * Extract tokens via better-sqlite3 (bundled dependency).
- * This is the preferred strategy — no external CLI required.
- */
-function extractTokensViaBetterSqlite(dbPath) {
-  // Dynamic require so the route stays importable even if native bindings fail
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Database = require("better-sqlite3");
-  const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+/** Extract tokens with Node's built-in SQLite driver. */
+async function extractTokensViaNodeSqlite(dbPath) {
+  const { DatabaseSync } = await import("node:sqlite");
+  const Database = DatabaseSync;
+  const db = new Database(dbPath, { readOnly: true });
 
   const query = (key) => {
     const row = db.prepare("SELECT value FROM itemTable WHERE key=? LIMIT 1").get(key);
     return row?.value || null;
-  };
-
-  const normalize = (value) => {
-    if (typeof value !== "string") return value;
-    try {
-      const parsed = JSON.parse(value);
-      return typeof parsed === "string" ? parsed : value;
-    } catch {
-      return value;
-    }
   };
 
   let accessToken = null;
@@ -114,65 +100,9 @@ function extractTokensViaBetterSqlite(dbPath) {
 }
 
 /**
- * Extract tokens via sqlite3 CLI.
- * Fallback when better-sqlite3 native bindings are unavailable.
- */
-async function extractTokensViaCLI(dbPath) {
-  const normalize = (raw) => {
-    const value = raw.trim();
-    try {
-      const parsed = JSON.parse(value);
-      return typeof parsed === "string" ? parsed : value;
-    } catch {
-      return value;
-    }
-  };
-
-  const query = async (sql) => {
-    const { stdout } = await execFileAsync("sqlite3", [dbPath, sql], {
-      timeout: 10000,
-    });
-    return stdout.trim();
-  };
-
-  // Try each key in priority order
-  let accessToken = null;
-  for (const key of ACCESS_TOKEN_KEYS) {
-    try {
-      const raw = await query(
-        `SELECT value FROM itemTable WHERE key='${key}' LIMIT 1`,
-      );
-      if (raw) {
-        accessToken = normalize(raw);
-        break;
-      }
-    } catch {
-      /* try next */
-    }
-  }
-
-  let machineId = null;
-  for (const key of MACHINE_ID_KEYS) {
-    try {
-      const raw = await query(
-        `SELECT value FROM itemTable WHERE key='${key}' LIMIT 1`,
-      );
-      if (raw) {
-        machineId = normalize(raw);
-        break;
-      }
-    } catch {
-      /* try next */
-    }
-  }
-
-  return { accessToken, machineId };
-}
-
-/**
  * GET /api/oauth/cursor/auto-import
  * Auto-detect and extract Cursor tokens from local SQLite database.
- * Strategy: better-sqlite3 → sqlite3 CLI → manual fallback
+ * Strategy: node:sqlite → manual fallback
  */
 export async function GET() {
   try {
@@ -218,9 +148,9 @@ export async function GET() {
       }
     }
 
-    // Strategy 1: better-sqlite3 (bundled — no external tools required)
+    // node:sqlite is built into the required Node.js runtime.
     try {
-      const tokens = extractTokensViaBetterSqlite(dbPath);
+      const tokens = await extractTokensViaNodeSqlite(dbPath);
       if (tokens.accessToken && tokens.machineId) {
         return NextResponse.json({
           found: true,
@@ -229,24 +159,10 @@ export async function GET() {
         });
       }
     } catch {
-      // Native bindings unavailable — try CLI fallback
+      // The Cursor database can be locked or unreadable.
     }
 
-    // Strategy 2: sqlite3 CLI
-    try {
-      const tokens = await extractTokensViaCLI(dbPath);
-      if (tokens.accessToken && tokens.machineId) {
-        return NextResponse.json({
-          found: true,
-          accessToken: tokens.accessToken,
-          machineId: tokens.machineId,
-        });
-      }
-    } catch {
-      // sqlite3 CLI not available either
-    }
-
-    // Strategy 3: ask user to paste manually
+    // Ask the user to paste manually when the database cannot be read.
     return NextResponse.json({ found: false, windowsManual: true, dbPath });
   } catch (error) {
     console.log("Cursor auto-import error:", error);

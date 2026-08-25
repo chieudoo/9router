@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
@@ -16,9 +17,7 @@ function MenuItem({ icon, label, onClick, trailing, danger }) {
           : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>
-        {icon}
-      </span>
+      <Icon name={icon} className={`text-[20px] ${danger ? "" : "text-text-muted"}`} />
       <span className="flex-1 text-left">{label}</span>
       {trailing && <span className="text-base">{trailing}</span>}
     </button>
@@ -33,7 +32,7 @@ MenuItem.propTypes = {
   danger: PropTypes.bool,
 };
 
-export default function HeaderMenu({ onLogout }) {
+export default function HeaderMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [shutdownOpen, setShutdownOpen] = useState(false);
@@ -74,7 +73,7 @@ export default function HeaderMenu({ onLogout }) {
           className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
           title="Menu"
         >
-          <span className="material-symbols-outlined">grid_view</span>
+          <Icon name="grid_view" className="" />
         </button>
 
         {isOpen && (
@@ -95,12 +94,6 @@ export default function HeaderMenu({ onLogout }) {
               danger
               onClick={() => { close(); setShutdownOpen(true); }}
             />
-            <MenuItem
-              icon="logout"
-              label="Logout"
-              danger
-              onClick={() => { close(); onLogout(); }}
-            />
           </div>
         )}
       </div>
@@ -120,7 +113,3 @@ export default function HeaderMenu({ onLogout }) {
     </>
   );
 }
-
-HeaderMenu.propTypes = {
-  onLogout: PropTypes.func.isRequired,
-};

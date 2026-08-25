@@ -661,7 +661,7 @@ Combo: "openclaw-free"
 - **Runtime**: Node.js 20+
 - **Framework**: Next.js 16
 - **UI**: React 19 + Tailwind CSS 4
-- **Database**: SQLite (better-sqlite3 / node:sqlite / sql.js fallback)
+- **Database**: SQLite (`node:sqlite`; requires Node.js 22.5+)
 - **Streaming**: Server-Sent Events (SSE)
 - **Auth**: OAuth 2.0 (PKCE) + JWT + API Keys
 

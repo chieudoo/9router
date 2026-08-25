@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -12,15 +13,13 @@ export function Spinner({ size = "md", className }) {
   };
 
   return (
-    <span
+    <Icon name="progress_activity"
       className={cn(
-        "material-symbols-outlined animate-spin text-brand-500",
+        "animate-spin text-brand-500",
         sizes[size],
         className
       )}
-    >
-      progress_activity
-    </span>
+     />
   );
 }
 
@@ -50,7 +49,7 @@ export function Skeleton({ className, ...props }) {
 // Card skeleton
 export function CardSkeleton() {
   return (
-    <div className="p-6 rounded-[14px] border border-border-subtle bg-surface shadow-[var(--shadow-soft)]">
+    <div className="p-6 rounded-[14px] border border-border-subtle bg-surface shadow-(--shadow-soft)">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="size-10 rounded-[10px]" />

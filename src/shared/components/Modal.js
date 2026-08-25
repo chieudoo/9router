@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
@@ -56,7 +57,7 @@ export default function Modal({
         className={cn(
           "relative w-full bg-surface",
           "border border-border-subtle",
-          "rounded-[14px] shadow-[var(--shadow-elev)]",
+          "rounded-[14px] shadow-(--shadow-elev)",
           "fade-in",
           sizes[size],
           className
@@ -93,7 +94,7 @@ export default function Modal({
               aria-label="Close"
               className="md:hidden p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <Icon name="close" className="text-[20px]" />
             </button>
           </div>
         )}

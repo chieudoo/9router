@@ -47,7 +47,7 @@ const funnelUrlCache = { value: null, port: null, fetchedAt: 0, refreshing: fals
 
 function fallbackBin() {
   if (fs.existsSync(TAILSCALE_BIN)) return TAILSCALE_BIN;
-  if (IS_WINDOWS && fs.existsSync(WINDOWS_TAILSCALE_BIN)) return WINDOWS_TAILSCALE_BIN;
+  if (IS_WINDOWS && fs.existsSync(/* turbopackIgnore: true */ WINDOWS_TAILSCALE_BIN)) return WINDOWS_TAILSCALE_BIN;
   if (!IS_WINDOWS) return UNIX_TAILSCALE_CANDIDATES.find((p) => fs.existsSync(p)) || null;
   return null;
 }
@@ -74,7 +74,7 @@ export function getTailscaleBin() {
   // First call: synchronously probe common install paths (no exec, no event-loop block)
   if (binCache.value === undefined) {
     if (fs.existsSync(TAILSCALE_BIN)) binCache.value = TAILSCALE_BIN;
-    else if (IS_WINDOWS && fs.existsSync(WINDOWS_TAILSCALE_BIN)) binCache.value = WINDOWS_TAILSCALE_BIN;
+    else if (IS_WINDOWS && fs.existsSync(/* turbopackIgnore: true */ WINDOWS_TAILSCALE_BIN)) binCache.value = WINDOWS_TAILSCALE_BIN;
     else if (!IS_WINDOWS) {
       const found = UNIX_TAILSCALE_CANDIDATES.find((p) => fs.existsSync(p));
       binCache.value = found || null;
@@ -463,7 +463,7 @@ async function installTailscaleWindows(log) {
   const maxWait = 10000;
   const start = Date.now();
   while (Date.now() - start < maxWait) {
-    if (fs.existsSync(WINDOWS_TAILSCALE_BIN)) {
+    if (fs.existsSync(/* turbopackIgnore: true */ WINDOWS_TAILSCALE_BIN)) {
       log("Installation complete.");
       return;
     }
@@ -655,7 +655,7 @@ export function startLogin(hostname) {
 
     const args = tsArgs("up", "--accept-routes");
     if (hostname) args.push(`--hostname=${hostname}`);
-    const child = spawn(bin, args, {
+    const child = spawn(/* turbopackIgnore: true */ bin, args, {
       stdio: ["ignore", "pipe", "pipe"],
       detached: true,
       windowsHide: true
@@ -746,7 +746,7 @@ export async function startFunnel(port) {
   try { execSync(`"${bin}" ${SOCKET_FLAG.join(" ")} funnel --bg reset`, { stdio: "ignore", windowsHide: true }); } catch (e) { /* ignore */ }
 
   return new Promise((resolve, reject) => {
-    const child = spawn(bin, tsArgs("funnel", "--bg", `${port}`), {
+    const child = spawn(/* turbopackIgnore: true */ bin, tsArgs("funnel", "--bg", `${port}`), {
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true
     });

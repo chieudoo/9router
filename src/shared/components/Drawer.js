@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
@@ -50,7 +51,7 @@ export default function Drawer({
       {/* Drawer panel */}
       <div className={cn(
         "absolute right-0 top-0 h-full bg-surface flex flex-col",
-        "shadow-[var(--shadow-elev)]",
+        "shadow-(--shadow-elev)",
         "slide-in-right",
         "border-l border-border-subtle",
         widths[width] || widths.md,
@@ -68,7 +69,7 @@ export default function Drawer({
             onClick={onClose}
             className="p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <Icon name="close" className="text-[20px]" />
           </button>
         </div>
 

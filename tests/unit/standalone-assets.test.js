@@ -28,15 +28,6 @@ describe("standalone build assets", () => {
       .toBe("public asset");
   });
 
-  it("uses a custom Next dist directory", () => {
-    const projectRoot = createBuildFixture(".next-cli-build");
-
-    copyStandaloneAssets({ projectRoot, distDir: ".next-cli-build" });
-
-    expect(readFileSync(join(projectRoot, ".next-cli-build", "standalone", ".next-cli-build", "static", "chunks", "app.js"), "utf8"))
-      .toBe("static asset");
-  });
-
   // Without the wrapper beside server.js nothing can prove a request is local.
   it("copies the request-sanitizing server wrapper into the standalone output", () => {
     const projectRoot = createBuildFixture(".next");
@@ -48,19 +39,4 @@ describe("standalone build assets", () => {
       .toBe("wrapper");
   });
 
-  it("does not modify workspace-traced CLI builds", () => {
-    const projectRoot = createBuildFixture(".next-cli-build");
-    const previousMode = process.env.NEXT_TRACING_ROOT_MODE;
-    process.env.NEXT_TRACING_ROOT_MODE = "workspace";
-
-    try {
-      copyStandaloneAssets({ projectRoot, distDir: ".next-cli-build" });
-    } finally {
-      if (previousMode === undefined) delete process.env.NEXT_TRACING_ROOT_MODE;
-      else process.env.NEXT_TRACING_ROOT_MODE = previousMode;
-    }
-
-    expect(() => readFileSync(join(projectRoot, ".next-cli-build", "standalone", ".next-cli-build", "static", "chunks", "app.js")))
-      .toThrow();
-  });
 });

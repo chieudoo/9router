@@ -253,7 +253,6 @@ describe("handleChatCore Headroom diagnostics", () => {
 
   it("bypasses token savers when requested by the client", async () => {
     const log = { debug: vi.fn(), info: vi.fn(), warn: vi.fn() };
-    const pxpipeTransform = vi.fn();
     const messages = [{ role: "user", content: "Write polished prose." }];
 
     global.fetch = vi.fn(async (url) => {
@@ -274,8 +273,6 @@ describe("handleChatCore Headroom diagnostics", () => {
       cavemanLevel: "full",
       ponytailEnabled: true,
       ponytailLevel: "full",
-      pxpipeEnabled: true,
-      pxpipeTransform,
       clientRawRequest: {
         endpoint: "/v1/chat/completions",
         body: {},
@@ -287,7 +284,6 @@ describe("handleChatCore Headroom diagnostics", () => {
     });
 
     expect(global.fetch).not.toHaveBeenCalled();
-    expect(pxpipeTransform).not.toHaveBeenCalled();
     expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
       body: expect.objectContaining({
         messages: [{ role: "user", content: "Write polished prose." }],

@@ -73,6 +73,8 @@ Result: Never stop coding, minimal cost + 20-40% token savings via RTK
 
 ## ⚡ Quick Start
 
+**Requirement:** Node.js 22.5.0 or newer. The database uses Node's built-in `node:sqlite` driver.
+
 **1. Install globally:**
 
 ```bash
@@ -1440,10 +1442,10 @@ Notes:
 
 ## 🛠️ Tech Stack
 
-- **Runtime**: Node.js 20+
+- **Runtime**: Node.js 22.5+
 - **Framework**: Next.js 16
 - **UI**: React 19 + Tailwind CSS 4
-- **Database**: SQLite (better-sqlite3 / node:sqlite / sql.js fallback)
+- **Database**: SQLite (`node:sqlite`)
 - **Streaming**: Server-Sent Events (SSE)
 - **Auth**: OAuth 2.0 (PKCE) + JWT + API Keys
 

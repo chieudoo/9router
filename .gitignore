@@ -15,9 +15,7 @@
 
 # next.js
 /.next/
-/.next-cli-build/
 /out/
-cli/.build-home/
 product
 # production
 /build
@@ -70,8 +68,6 @@ deploy*.sh
 ecosystem.config.*
 
 scripts/agSniffer/*
-gitbooks/*
-gitbook/README.md
 
 # Refactor backup reference (do not bundle/lint)
 open-sse.old/

@@ -1359,7 +1359,7 @@ docker pull decolua/9router:latest   # به‌روزرسانی به آخرین �
 - **زمان اجرا**: Node.js 20+
 - **فریم‌ورک**: Next.js 16
 - **UI**: React 19 + Tailwind CSS 4
-- **پایگاه داده**: SQLite (better-sqlite3 / node:sqlite / بازگشت sql.js)
+- **پایگاه داده**: SQLite (`node:sqlite`؛ نیازمند Node.js 22.5+)
 - **پخش جریانی**: رویدادهای ارسال شده از سرور (SSE)
 - **احراز هویت**: OAuth 2.0 (PKCE) + JWT + کلیدهای API
 

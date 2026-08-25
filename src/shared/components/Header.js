@@ -1,6 +1,7 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import PropTypes from "prop-types";
@@ -11,43 +12,12 @@ import ThemeToggle from "@/shared/components/ThemeToggle";
 import DonateModal from "@/shared/components/DonateModal";
 import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
-import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers";
+import { AI_PROVIDERS } from "@/shared/constants/providers";
 import { getProviderIconSrc } from "@/shared/utils/providerIcon";
 import { translate } from "@/i18n/runtime";
 
 const getPageInfo = (pathname) => {
   if (!pathname) return { title: "", description: "", breadcrumbs: [] };
-
-  // Media provider detail: /dashboard/media-providers/[kind]/[id]
-  const mediaDetailMatch = pathname.match(/\/media-providers\/([^/]+)\/([^/]+)$/);
-  if (mediaDetailMatch) {
-    const kindId = mediaDetailMatch[1];
-    const providerId = mediaDetailMatch[2];
-    const kindConfig = MEDIA_PROVIDER_KINDS.find((k) => k.id === kindId);
-    const provider = AI_PROVIDERS[providerId];
-    return {
-      title: provider?.name || providerId,
-      description: "",
-      breadcrumbs: [
-        { label: "Media Providers", href: `/dashboard/media-providers/${kindId}` },
-        { label: kindConfig?.label || kindId, href: `/dashboard/media-providers/${kindId}` },
-        { label: provider?.name || providerId, image: getProviderIconSrc(providerId) },
-      ],
-    };
-  }
-
-  // Media provider kind: /dashboard/media-providers/[kind]
-  const mediaKindMatch = pathname.match(/\/media-providers\/([^/]+)$/);
-  if (mediaKindMatch) {
-    const kindId = mediaKindMatch[1];
-    const kindConfig = MEDIA_PROVIDER_KINDS.find((k) => k.id === kindId);
-    return {
-      title: kindConfig?.label || kindId,
-      description: `Manage your ${kindConfig?.label || kindId} providers`,
-      icon: kindConfig?.icon || "perm_media",
-      breadcrumbs: [],
-    };
-  }
 
   // Provider detail page: /dashboard/providers/[id]
   const providerMatch = pathname.match(/\/providers\/([^/]+)$/);
@@ -70,7 +40,7 @@ const getPageInfo = (pathname) => {
     }
   }
 
-  if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
+  if (pathname.includes("/providers"))
     return {
       title: "Providers",
       description: "Manage your AI provider connections",
@@ -155,13 +125,6 @@ const getPageInfo = (pathname) => {
       icon: "settings",
       breadcrumbs: [],
     };
-  if (pathname.includes("/translator"))
-    return {
-      title: "Translator",
-      description: "Debug translation flow between formats",
-      icon: "translate",
-      breadcrumbs: [],
-    };
   if (pathname.includes("/console-log"))
     return {
       title: "Console Log",
@@ -181,50 +144,11 @@ const getPageInfo = (pathname) => {
 
 export default function Header({ onMenuClick, showMenuButton = true }) {
   const pathname = usePathname();
-  const [displayName, setDisplayName] = useState("");
-  const [loginMethod, setLoginMethod] = useState("");
   const [donateOpen, setDonateOpen] = useState(false);
 
   // Memoize page info to prevent unnecessary recalculations
   const pageInfo = useMemo(() => getPageInfo(pathname), [pathname]);
   const { title, description, icon, breadcrumbs } = pageInfo;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadAuthStatus() {
-      try {
-        const res = await fetch("/api/auth/status", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) {
-          setDisplayName(data?.displayName || data?.samlName || data?.samlEmail || data?.oidcName || data?.oidcEmail || "");
-          setLoginMethod(data?.loginMethod || "");
-        }
-      } catch {
-        if (!cancelled) {
-          setDisplayName("");
-          setLoginMethod("");
-        }
-      }
-    }
-
-    loadAuthStatus();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
-      if (res.ok) {
-        window.location.assign("/login");
-      }
-    } catch (err) {
-      console.error("Failed to logout:", err);
-    }
-  };
 
   return (
     <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
@@ -235,7 +159,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
             onClick={onMenuClick}
             className="text-text-main hover:text-primary transition-colors"
           >
-            <span className="material-symbols-outlined">menu</span>
+            <Icon name="menu" className="" />
           </button>
         )}
       </div>
@@ -250,9 +174,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                 className="flex items-center gap-2"
               >
                 {index > 0 && (
-                  <span className="material-symbols-outlined text-text-muted text-base">
-                    chevron_right
-                  </span>
+                  <Icon name="chevron_right" className="text-text-muted text-base" />
                 )}
                 {crumb.href ? (
                   <Link
@@ -284,9 +206,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
           <div>
             <div className="flex items-center gap-2">
               {icon && (
-                <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">
-                  {icon}
-                </span>
+                <Icon name={icon} className="text-primary text-xl lg:text-2xl" />
               )}
               <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">
                 {translate(title)}
@@ -303,30 +223,18 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
-        {displayName && (loginMethod === "OIDC" || loginMethod === "SAML") && (
-          <div
-            className="hidden sm:flex items-center max-w-[220px] px-3 py-1.5 rounded-full border border-border bg-surface/70 text-xs text-text-muted truncate"
-            title={displayName}
-          >
-            <span className="material-symbols-outlined text-[14px] mr-1.5 text-primary">person</span>
-            <span className="truncate">{displayName}</span>
-            <span className="ml-2 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-              {loginMethod}
-            </span>
-          </div>
-        )}
         <HeaderSearch />
         <button
           onClick={() => setDonateOpen(true)}
           className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-pink-500/30 bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-500/20 transition-colors text-sm font-medium"
           aria-label="Donate"
         >
-          <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
+          <Icon name="volunteer_activism" className="text-[18px]" />
           <span className="hidden sm:inline">Donate</span>
         </button>
         <ThemeToggle />
         <HeaderLanguage />
-        <HeaderMenu onLogout={handleLogout} />
+        <HeaderMenu />
       </div>
       <DonateModal isOpen={donateOpen} onClose={() => setDonateOpen(false)} />
     </header>
@@ -343,9 +251,7 @@ function HeaderSearch() {
 
   return (
     <div className="relative w-[160px] sm:w-[220px]">
-      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">
-        search
-      </span>
+      <Icon name="search" className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none" />
       <input
         type="text"
         value={query}
@@ -360,7 +266,7 @@ function HeaderSearch() {
           className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded"
           aria-label="Clear search"
         >
-          <span className="material-symbols-outlined text-[16px]">close</span>
+          <Icon name="close" className="text-[16px]" />
         </button>
       )}
     </div>

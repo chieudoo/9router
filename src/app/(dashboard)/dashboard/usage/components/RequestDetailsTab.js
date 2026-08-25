@@ -1,4 +1,5 @@
 "use client";
+import Icon from "@/shared/components/Icon";
 
 import { useState, useEffect, useCallback } from "react";
 import Card from "@/shared/components/Card";
@@ -62,15 +63,13 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon = null 
         className="w-full flex items-center justify-between p-3 bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors"
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="material-symbols-outlined text-[18px] text-text-muted">{icon}</span>}
+          {icon && <Icon name={icon} className="text-[18px] text-text-muted" />}
           <span className="font-semibold text-sm text-text-main">{title}</span>
         </div>
-        <span className={cn(
-          "material-symbols-outlined text-[20px] text-text-muted transition-transform duration-200",
+        <Icon name="chevron_right" className={cn(
+          "text-[20px] text-text-muted transition-transform duration-200",
           isOpen ? "rotate-90" : ""
-        )}>
-          chevron_right
-        </span>
+        )} />
       </button>
       
       {isOpen && (
@@ -268,7 +267,7 @@ export default function RequestDetailsTab() {
                 <tr>
                   <td colSpan="7" className="p-8 text-center text-text-muted">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+                      <Icon name="progress_activity" className="animate-spin text-[20px]" />
                       Loading...
                     </div>
                   </td>
@@ -413,48 +412,6 @@ export default function RequestDetailsTab() {
               </div>
             </div>
 
-            {selectedDetail.pxpipe && (
-              <div className="rounded-lg border border-black/5 dark:border-white/5 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-[18px] text-text-muted">image</span>
-                  <span className="font-semibold text-sm text-text-main">PXPIPE</span>
-                  <span className={cn(
-                    "text-xs px-2 py-0.5 rounded",
-                    selectedDetail.pxpipe.applied
-                      ? "bg-green-500/15 text-green-600"
-                      : "bg-amber-500/15 text-amber-600"
-                  )}>
-                    {selectedDetail.pxpipe.applied ? "Activated" : "Skipped"}
-                  </span>
-                </div>
-                {selectedDetail.pxpipe.applied ? (
-                  <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                    <div>
-                      <span className="text-text-muted block text-xs">Original (est.)</span>
-                      <span className="font-mono">{(selectedDetail.pxpipe.tokensBeforeEst || 0).toLocaleString()} tokens</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Compressed (est.)</span>
-                      <span className="font-mono">{(selectedDetail.pxpipe.tokensAfterEst || 0).toLocaleString()} tokens</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Saved</span>
-                      <span className="font-mono text-green-600">{selectedDetail.pxpipe.savedPct || 0}%</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Images</span>
-                      <span className="font-mono">{selectedDetail.pxpipe.imageCount || 0} ({selectedDetail.pxpipe.durationMs || 0}ms)</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-muted">
-                    Reason: <span className="font-mono">{selectedDetail.pxpipe.reason}</span>
-                    {selectedDetail.pxpipe.detail ? ` — ${selectedDetail.pxpipe.detail}` : ""}
-                  </p>
-                )}
-              </div>
-            )}
-
             <div className="space-y-4">
               <CollapsibleSection title="1. Client Request (Input)" defaultOpen={true} icon="input">
                 <pre className="max-h-[300px] max-w-full overflow-auto rounded-lg border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
@@ -485,7 +442,7 @@ export default function RequestDetailsTab() {
                 {selectedDetail.response?.thinking && (
                   <div className="mb-4">
                     <h4 className="font-semibold text-text-main mb-2 flex items-center gap-2 text-xs uppercase tracking-wide opacity-70">
-                      <span className="material-symbols-outlined text-[16px]">psychology</span>
+                      <Icon name="psychology" className="text-[16px]" />
                       Thinking Process
                     </h4>
                     <pre className="max-h-[200px] max-w-full overflow-auto rounded-lg border border-amber-200 bg-amber-50 p-3 font-mono text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100 sm:p-4">
