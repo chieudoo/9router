@@ -21,7 +21,7 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
   const replaceVars = (text) => {
     const keyToUse = (selectedApiKey && selectedApiKey.trim()) 
       ? selectedApiKey 
-      : "sk_9router";
+      : "sk_xproxy";
     
     // Add /v1 suffix only if not already present (DRY - avoid duplicate)
     const normalizedBaseUrl = baseUrl || `http://localhost:${process.env.PORT}`;

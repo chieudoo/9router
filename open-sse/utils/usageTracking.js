@@ -171,7 +171,11 @@ export function canonicalizeUsage(usage) {
   // (buildUsage()'s OpenAI-forwarding format) when the top-level field is
   // absent, so callers that pass a buildUsage() object through don't silently
   // drop cache_creation.
-  const cacheCreation = num(usage.cache_creation_input_tokens ?? usage.prompt_tokens_details?.cache_creation_tokens);
+  const cacheCreation = num(
+    usage.cache_creation_input_tokens
+    ?? usage.prompt_tokens_details?.cache_creation_tokens
+    ?? usage.input_tokens_details?.cache_creation_tokens
+  );
 
   let prompt = num(usage.prompt_tokens ?? usage.input_tokens);
   let cached;
@@ -190,7 +194,11 @@ export function canonicalizeUsage(usage) {
     prompt = prompt + cached + cacheCreation;
   } else {
     // OpenAI/Gemini path (or already-canonical input): prompt already includes cached_tokens.
-    cached = num(usage.cached_tokens);
+    cached = num(
+      usage.cached_tokens
+      ?? usage.prompt_tokens_details?.cached_tokens
+      ?? usage.input_tokens_details?.cached_tokens
+    );
   }
 
   const result = {

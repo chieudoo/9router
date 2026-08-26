@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
-const proxyClientMaxBodySize = process.env.NINEROUTER_PROXY_CLIENT_MAX_BODY_SIZE || "128mb";
+const proxyClientMaxBodySize = process.env.XPROXY_PROXY_CLIENT_MAX_BODY_SIZE || "128mb";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

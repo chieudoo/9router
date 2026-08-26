@@ -47,6 +47,22 @@ describe("#3260 non-streaming usage extraction for enveloped Gemini responses", 
       .toMatchObject({ prompt_tokens: 10, completion_tokens: 2 });
   });
 
+  it("preserves top-level OpenAI cache counters", () => {
+    expect(extractUsageFromResponse({
+      usage: {
+        prompt_tokens: 1234,
+        completion_tokens: 56,
+        cached_tokens: 900,
+        cache_creation_input_tokens: 120,
+      },
+    })).toMatchObject({
+      prompt_tokens: 1234,
+      completion_tokens: 56,
+      cached_tokens: 900,
+      cache_creation_input_tokens: 120,
+    });
+  });
+
   it("returns null when there is no usage anywhere", () => {
     expect(extractUsageFromResponse({ response: { candidates: [] } })).toBeNull();
     expect(extractUsageFromResponse(null)).toBeNull();

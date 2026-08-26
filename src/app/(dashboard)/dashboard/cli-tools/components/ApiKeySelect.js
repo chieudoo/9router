@@ -35,7 +35,7 @@ export default function ApiKeySelect({ value, onChange, apiKeys = [], className 
   if (noKeys && mode !== CUSTOM_VALUE) {
     return (
       <span className={`min-w-0 rounded bg-surface/40 px-2 py-2 text-xs text-text-muted sm:py-1.5 ${className}`}>
-        sk_9router (default)
+        sk_xproxy (default)
       </span>
     );
   }

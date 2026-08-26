@@ -1,5 +1,6 @@
 "use client";
 import Icon from "@/shared/components/Icon";
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -17,18 +18,18 @@ export default function Navigation() {
           onClick={() => router.push("/")}
           aria-label="Navigate to home"
         >
-          <div className="size-8 rounded bg-linear-to-br from-[#f97815] to-orange-700 flex items-center justify-center text-white">
-            <Icon name="hub" className="text-[20px]" />
+          <div className="size-8">
+            <Image src="/xproxy-mark.svg" alt="" width={32} height={32} priority />
           </div>
-          <h2 className="text-white text-xl font-bold tracking-tight">9Router</h2>
+          <h2 className="text-white text-xl font-bold tracking-tight">XProxy</h2>
         </button>
 
         {/* Desktop menu */}
         <div className="hidden md:flex items-center gap-8">
           <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features">Features</a>
           <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works">How it Works</a>
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/decolua/9router#readme" target="_blank" rel="noopener noreferrer">Docs</a>
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors flex items-center gap-1" href="https://github.com/decolua/9router" target="_blank" rel="noopener noreferrer">
+          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/chieudoo/9router#readme" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors flex items-center gap-1" href="https://github.com/chieudoo/9router" target="_blank" rel="noopener noreferrer">
             GitHub <Icon name="open_in_new" className="text-[14px]" />
           </a>
         </div>
@@ -56,8 +57,8 @@ export default function Navigation() {
           <div className="flex flex-col gap-4 p-6">
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/decolua/9router#readme" target="_blank" rel="noopener noreferrer">Docs</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/decolua/9router" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/chieudoo/9router#readme" target="_blank" rel="noopener noreferrer">Docs</a>
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/chieudoo/9router" target="_blank" rel="noopener noreferrer">GitHub</a>
             <button 
               onClick={() => router.push("/dashboard")}
               className="h-9 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-sm font-bold"

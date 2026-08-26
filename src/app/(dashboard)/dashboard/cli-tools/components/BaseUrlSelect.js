@@ -3,7 +3,7 @@ import Icon from "@/shared/components/Icon";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const STORAGE_KEY = "9router.cliToolEndpointPresets";
+const STORAGE_KEY = "xproxy.cliToolEndpointPresets";
 const CUSTOM_VALUE = "__custom__";
 const SAVE_VALUE = "__save__";
 

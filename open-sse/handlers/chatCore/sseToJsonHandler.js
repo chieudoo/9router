@@ -218,7 +218,12 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
       saveRequestDetail(buildRequestDetail({
         ...ctx,
         latency: { ttft: totalLatency, total: totalLatency },
-        tokens: { prompt_tokens: inTokensForLog, completion_tokens: usage.output_tokens || 0 },
+        tokens: {
+          prompt_tokens: inTokensForLog,
+          completion_tokens: usage.output_tokens || 0,
+          cached_tokens: usage.cache_read_input_tokens || usage.cached_tokens || 0,
+          cache_creation_input_tokens: usage.cache_creation_input_tokens || 0,
+        },
         response: { content: textContent, thinking: null, finish_reason: jsonResponse.status || "unknown" },
         status: "success"
       }, { endpoint: clientRawRequest?.endpoint || null })).catch(() => {});

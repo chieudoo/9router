@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="xproxy-gradient" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff9a3d"/>
+      <stop offset=".48" stop-color="#f97815"/>
+      <stop offset="1" stop-color="#b94109"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#181411"/>
+  <path d="M15 18h10.6L32 27.7 38.4 18H49L37.3 34 49 50H38.4L32 40.3 25.6 50H15l11.7-16L15 18Z" fill="url(#xproxy-gradient)"/>
+</svg>
