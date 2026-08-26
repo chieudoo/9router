@@ -5,7 +5,7 @@ import Image from "next/image";
 export default function HowItWorks() {
   return (
     <section className="py-24 border-y border-[#3a2f27] bg-[#23180f]/30" id="how-it-works">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="mx-auto px-6">
         <div className="mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">How XProxy Works</h2>
           <p className="text-gray-400 max-w-xl text-lg">

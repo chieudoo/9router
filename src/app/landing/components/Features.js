@@ -91,7 +91,7 @@ const FEATURES = [
 export default function Features() {
   return (
     <section className="py-24 px-6" id="features">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         <div className="mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Powerful Features</h2>
           <p className="text-gray-400 max-w-xl text-lg">

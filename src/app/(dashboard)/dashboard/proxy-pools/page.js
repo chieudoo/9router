@@ -566,7 +566,7 @@ export default function ProxyPoolsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:gap-6 sm:px-0">
+      <div className="mx-auto flex w-full flex-col gap-4 px-1 sm:gap-6 sm:px-0">
         <CardSkeleton />
         <CardSkeleton />
       </div>
@@ -574,7 +574,7 @@ export default function ProxyPoolsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:gap-6 sm:px-0">
+    <div className="mx-auto flex w-full flex-col gap-4 px-1 sm:gap-6 sm:px-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-xl font-semibold sm:text-2xl">Proxy Pools</h1>
