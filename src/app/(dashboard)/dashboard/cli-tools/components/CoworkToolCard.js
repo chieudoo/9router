@@ -24,8 +24,6 @@ export default function CoworkToolCard({
   apiKeys,
   activeProviders,
   hasActiveProviders,
-  cloudEnabled,
-  cloudUrl,
   tunnelEnabled,
   tunnelPublicUrl,
   tailscaleEnabled,
@@ -133,7 +131,7 @@ export default function CoworkToolCard({
     try {
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_9router" : null);
+        || "sk_9router";
 
       const res = await fetch(ENDPOINT, {
         method: "POST",
@@ -229,7 +227,7 @@ export default function CoworkToolCard({
   const getManualConfigs = () => {
     const keyToUse = (selectedApiKey && selectedApiKey.trim())
       ? selectedApiKey
-      : (!cloudEnabled ? "sk_9router" : "<API_KEY_FROM_DASHBOARD>");
+      : "sk_9router";
 
     const modelsToShow = selectedModels.length > 0 ? selectedModels : ["provider/model-id"];
     const cfg = {
@@ -305,8 +303,6 @@ export default function CoworkToolCard({
                     tunnelPublicUrl={tunnelPublicUrl}
                     tailscaleEnabled={tailscaleEnabled}
                     tailscaleUrl={tailscaleUrl}
-                    cloudEnabled={cloudEnabled}
-                    cloudUrl={cloudUrl}
                   />
                 </div>
 
@@ -323,7 +319,7 @@ export default function CoworkToolCard({
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <Icon name="arrow_forward" className="hidden text-text-muted text-[14px] sm:inline" />
-                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} cloudEnabled={cloudEnabled} />
+                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr] sm:items-center sm:gap-2">

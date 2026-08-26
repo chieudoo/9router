@@ -67,7 +67,6 @@ export default function GrokBuildToolCard({
   hasActiveProviders,
   apiKeys,
   activeProviders,
-  cloudEnabled,
   initialStatus,
   tunnelEnabled,
   tunnelPublicUrl,
@@ -155,7 +154,7 @@ export default function GrokBuildToolCard({
   const getEffectiveBaseUrl = () => {
     const url = customBaseUrl || (typeof window !== "undefined"
       ? window.location.origin.replace("://localhost", "://127.0.0.1")
-      : "http://127.0.0.1:20128");
+      : `http://127.0.0.1:${process.env.PORT}`);
     return url.endsWith("/v1") ? url : `${url}/v1`;
   };
 
@@ -165,7 +164,7 @@ export default function GrokBuildToolCard({
     try {
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_9router" : null);
+        || "sk_9router";
       const mappedSubagents = {};
       for (const type of SUBAGENT_TYPES) {
         const model = subagentModels[type.id]?.trim();
@@ -229,7 +228,7 @@ export default function GrokBuildToolCard({
 
   const getManualConfigs = () => {
     const keyToUse = selectedApiKey?.trim()
-      || (!cloudEnabled ? "sk_9router" : "<API_KEY_FROM_DASHBOARD>");
+      || "sk_9router";
     const baseUrl = getEffectiveBaseUrl();
     const mainModel = selectedModel || "provider/model-id";
     const blocks = [
@@ -325,7 +324,7 @@ export default function GrokBuildToolCard({
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <Icon name="arrow_forward" className="hidden text-text-muted text-[14px] sm:inline" />
-                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} cloudEnabled={cloudEnabled} />
+                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} />
                 </div>
 
                 <ModelField label="Main Model" value={selectedModel} onChange={setSelectedModel} placeholder="provider/model-id" onSelect={() => setModelTarget("main")} disabled={!hasActiveProviders} />

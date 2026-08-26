@@ -27,23 +27,14 @@ describe("DB SQLite layer — public API parity", () => {
   it("settings: get → defaults; update → merge", async () => {
     const s = await sqliteDb.getSettings();
     expect(s).toBeDefined();
-    expect(s.cloudEnabled).toBe(false);
 
-    const updated = await sqliteDb.updateSettings({ cloudEnabled: true, customField: "x" });
-    expect(updated.cloudEnabled).toBe(true);
+    const updated = await sqliteDb.updateSettings({ customField: "x" });
     expect(updated.customField).toBe("x");
 
     const re = await sqliteDb.getSettings();
-    expect(re.cloudEnabled).toBe(true);
     expect(re.customField).toBe("x");
   });
 
-  it("isCloudEnabled reflects settings", async () => {
-    await sqliteDb.updateSettings({ cloudEnabled: true });
-    expect(await sqliteDb.isCloudEnabled()).toBe(true);
-    await sqliteDb.updateSettings({ cloudEnabled: false });
-    expect(await sqliteDb.isCloudEnabled()).toBe(false);
-  });
 
   it("apiKeys: create/get/validate/delete", async () => {
     const k = await sqliteDb.createApiKey("test-key", "machine-abc");

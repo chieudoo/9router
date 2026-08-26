@@ -2,7 +2,6 @@
 import Icon from "@/shared/components/Icon";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { UPDATER_CONFIG } from "@/shared/constants/config";
 
 const STORAGE_KEY = "9router.cliToolEndpointPresets";
 const CUSTOM_VALUE = "__custom__";
@@ -30,11 +29,13 @@ const writeSavedPresets = (presets) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
 };
 
-const buildOptions = ({ requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, cloudEnabled, cloudUrl, savedPresets, withV1 }) => {
+const buildOptions = ({ requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, savedPresets, withV1 }) => {
   const opts = [];
   const wrap = (url) => (withV1 ? ensureV1(url) : (url || "").replace(/\/+$/, ""));
   if (!requiresExternalUrl) {
-    const localUrl = wrap(`http://127.0.0.1:${UPDATER_CONFIG.appPort}`);
+    const localUrl = wrap(typeof window !== "undefined"
+      ? window.location.origin.replace("://localhost", "://127.0.0.1")
+      : `http://127.0.0.1:${process.env.PORT}`);
     opts.push({ value: "local", label: localUrl, url: localUrl });
   }
   if (tunnelEnabled && tunnelPublicUrl) {
@@ -44,10 +45,6 @@ const buildOptions = ({ requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tai
   if (tailscaleEnabled && tailscaleUrl) {
     const u = wrap(tailscaleUrl);
     opts.push({ value: "tailscale", label: u, url: u });
-  }
-  if (cloudEnabled && cloudUrl) {
-    const u = wrap(cloudUrl);
-    opts.push({ value: "cloud", label: u, url: u });
   }
   savedPresets.forEach((p) => {
     opts.push({ value: `saved:${p.name}`, label: p.baseUrl, url: p.baseUrl, saved: true });
@@ -64,8 +61,6 @@ export default function BaseUrlSelect({
   tunnelPublicUrl = "",
   tailscaleEnabled = false,
   tailscaleUrl = "",
-  cloudEnabled = false,
-  cloudUrl = "",
   withV1 = true,
 }) {
   const [savedPresets, setSavedPresets] = useState([]);
@@ -78,8 +73,8 @@ export default function BaseUrlSelect({
   }, []);
 
   const options = useMemo(
-    () => buildOptions({ requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, cloudEnabled, cloudUrl, savedPresets, withV1 }),
-    [requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, cloudEnabled, cloudUrl, savedPresets, withV1]
+    () => buildOptions({ requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, savedPresets, withV1 }),
+    [requiresExternalUrl, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, savedPresets, withV1]
   );
 
   // Always default to first option (127.0.0.1) on mount, ignore persisted value

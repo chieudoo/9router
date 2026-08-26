@@ -63,18 +63,6 @@ const FEATURES = [
     }
   },
   { 
-    icon: "cloud_sync", 
-    title: "Cloud Sync", 
-    desc: "Sync your configurations across devices instantly.", 
-    colors: {
-      border: "hover:border-sky-500/50",
-      bg: "hover:bg-sky-500/5",
-      iconBg: "bg-sky-500/10",
-      iconText: "text-sky-500",
-      titleHover: "group-hover:text-sky-400"
-    }
-  },
-  { 
     icon: "terminal", 
     title: "CLI Support", 
     desc: "Works with Claude Code, Codex, Cline, Cursor, and more.", 

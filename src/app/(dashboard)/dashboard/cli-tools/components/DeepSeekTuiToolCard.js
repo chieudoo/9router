@@ -18,7 +18,6 @@ export default function DeepSeekTuiToolCard({
   hasActiveProviders,
   apiKeys,
   activeProviders,
-  cloudEnabled,
   initialStatus,
   tunnelEnabled,
   tunnelPublicUrl,
@@ -102,7 +101,7 @@ export default function DeepSeekTuiToolCard({
     if (typeof window !== "undefined") {
       return normalizeLocalhost(window.location.origin);
     }
-    return "http://127.0.0.1:20128";
+    return `http://127.0.0.1:${process.env.PORT}`;
   };
 
   const getEffectiveBaseUrl = () => {
@@ -116,7 +115,7 @@ export default function DeepSeekTuiToolCard({
     try {
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_9router" : null);
+        || "sk_9router";
 
       const res = await fetch(ENDPOINT, {
         method: "POST",
@@ -169,7 +168,7 @@ export default function DeepSeekTuiToolCard({
   const getManualConfigs = () => {
     const keyToUse = (selectedApiKey && selectedApiKey.trim())
       ? selectedApiKey
-      : (!cloudEnabled ? "sk_9router" : "<API_KEY_FROM_DASHBOARD>");
+      : "sk_9router";
 
     const tomlContent = `[providers.openai]
 base_url = "${getEffectiveBaseUrl()}"
@@ -278,7 +277,7 @@ model = "${selectedModel || "provider/model-id"}"
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <Icon name="arrow_forward" className="hidden text-text-muted text-[14px] sm:inline" />
-                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} cloudEnabled={cloudEnabled} />
+                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">

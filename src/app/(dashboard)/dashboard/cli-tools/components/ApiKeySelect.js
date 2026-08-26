@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const CUSTOM_VALUE = "__custom__";
 
-export default function ApiKeySelect({ value, onChange, apiKeys = [], cloudEnabled = false, className = "" }) {
+export default function ApiKeySelect({ value, onChange, apiKeys = [], className = "" }) {
   const isCustom = !apiKeys.some((k) => k.key === value) && value !== "";
   const [mode, setMode] = useState(() => {
     if (!value) return apiKeys.length > 0 ? apiKeys[0].key : CUSTOM_VALUE;
@@ -35,7 +35,7 @@ export default function ApiKeySelect({ value, onChange, apiKeys = [], cloudEnabl
   if (noKeys && mode !== CUSTOM_VALUE) {
     return (
       <span className={`min-w-0 rounded bg-surface/40 px-2 py-2 text-xs text-text-muted sm:py-1.5 ${className}`}>
-        {cloudEnabled ? "No API keys - Create one in Keys page" : "sk_9router (default)"}
+        sk_9router (default)
       </span>
     );
   }

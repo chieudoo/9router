@@ -84,7 +84,7 @@ export function getSamlBaseUrl(request, settings) {
     }
   }
 
-  return "http://localhost:20128";
+  return `http://localhost:${process.env.PORT}`;
 }
 
 export function createSamlInstance(settings, origin) {

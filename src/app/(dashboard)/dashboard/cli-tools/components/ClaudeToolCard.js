@@ -8,8 +8,6 @@ import BaseUrlSelect from "./BaseUrlSelect";
 import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
 
-const CLOUD_URL = process.env.NEXT_PUBLIC_CLOUD_URL;
-
 // Context window presets. UI shows the round number; the value written is nudged
 // down 2K to stay safely under the upstream hard cap.
 const CONTEXT_OPTIONS = [
@@ -30,7 +28,6 @@ export default function ClaudeToolCard({
   baseUrl,
   hasActiveProviders,
   apiKeys,
-  cloudEnabled,
   initialStatus,
   tunnelEnabled,
   tunnelPublicUrl,
@@ -58,7 +55,7 @@ export default function ClaudeToolCard({
     if (!claudeStatus?.installed) return null;
     const currentUrl = claudeStatus.settings?.env?.ANTHROPIC_BASE_URL;
     if (!currentUrl) return "not_configured";
-    if (matchKnownEndpoint(currentUrl, { tunnelPublicUrl, tailscaleUrl, cloudUrl: cloudEnabled ? CLOUD_URL : null })) return "configured";
+    if (matchKnownEndpoint(currentUrl, { tunnelPublicUrl, tailscaleUrl })) return "configured";
     return "other";
   };
 
@@ -170,7 +167,7 @@ export default function ClaudeToolCard({
       // Get key from dropdown, fallback to first key or sk_9router for localhost
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_9router" : null);
+        || "sk_9router";
 
       if (keyToUse) {
         env.ANTHROPIC_AUTH_TOKEN = keyToUse;
@@ -237,7 +234,7 @@ export default function ClaudeToolCard({
   const getManualConfigs = () => {
     const keyToUse = (selectedApiKey && selectedApiKey.trim())
       ? selectedApiKey
-      : (!cloudEnabled ? "sk_9router" : "<API_KEY_FROM_DASHBOARD>");
+      : "sk_9router";
     const env = { ANTHROPIC_BASE_URL: getEffectiveBaseUrl(), ANTHROPIC_AUTH_TOKEN: keyToUse };
     tool.defaultModels.forEach((model) => {
       const targetModel = modelMappings[model.alias];
@@ -353,7 +350,7 @@ export default function ClaudeToolCard({
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <Icon name="arrow_forward" className="hidden text-text-muted text-[14px] sm:inline" />
-                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} cloudEnabled={cloudEnabled} />
+                  <ApiKeySelect value={selectedApiKey} onChange={setSelectedApiKey} apiKeys={apiKeys} />
                 </div>
 
                 {/* Model Mappings */}

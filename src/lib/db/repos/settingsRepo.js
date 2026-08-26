@@ -1,11 +1,10 @@
 import { getAdapter } from "../driver.js";
 import { parseJson, stringifyJson } from "../helpers/jsonCol.js";
 
-const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
+const DEFAULT_MITM_ROUTER_BASE = `http://localhost:${process.env.PORT}`;
 const DEFAULT_HEADROOM_URL = process.env.HEADROOM_URL || "http://localhost:8787";
 
 const DEFAULT_SETTINGS = {
-  cloudEnabled: false,
   tunnelEnabled: false,
   tunnelUrl: "",
   tunnelProvider: "cloudflare",
@@ -103,21 +102,6 @@ export async function updateSettings(updates) {
     );
   });
   return mergeWithDefaults(next);
-}
-
-export async function isCloudEnabled() {
-  const settings = await getSettings();
-  return settings.cloudEnabled === true;
-}
-
-export async function getCloudUrl() {
-  const settings = await getSettings();
-  return (
-    settings.cloudUrl ||
-    process.env.CLOUD_URL ||
-    process.env.NEXT_PUBLIC_CLOUD_URL ||
-    ""
-  );
 }
 
 export async function exportSettings() {
