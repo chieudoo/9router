@@ -1,117 +1,165 @@
 <div align="center">
-  <img src="./public/xproxy-mark.svg" alt="XProxy" width="96" />
+  <img src="./public/xproxy-mark.svg" alt="XProxy" width="112" />
 
   # XProxy
 
-  **AI gateway cục bộ cho coding agent và các AI provider.**
+  ### Một endpoint local cho toàn bộ workflow AI coding.
 
-  [English](./README.md) | [Tieng Viet](./README.vi.md)
+  Định tuyến request, xoay vòng tài khoản, chuyển đổi định dạng provider, theo dõi usage và tối ưu các phiên agent có nhiều tool call.
+
+  [Bắt đầu](#bat-dau) · [Token Saver](#token-saver) · [Cấu hình](#cau-hinh) · [English](./README.md)
+
+  [![Node.js](https://img.shields.io/badge/Node.js-22.5%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+  [![GitHub](https://img.shields.io/badge/GitHub-chieudoo%2Fxproxy-181717?logo=github)](https://github.com/chieudoo/xproxy)
+  [![Docker](https://img.shields.io/badge/Docker-chieudoo%2Fxproxy-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/)
 </div>
 
-## Tổng quan
+---
 
-XProxy cung cấp một endpoint tương thích OpenAI và định tuyến request tới các AI provider đã kết nối. Dashboard cục bộ quản lý credentials provider, API key, usage, request details, cấu hình CLI tool, fallback và Token Saver.
+<p align="center">
+  <img src="./images/xproxy-providers.webp" alt="Dashboard providers của XProxy" width="100%" />
+</p>
 
-## Tính năng
+## Control Plane Cho Agent Của Bạn
 
-- Một endpoint cho Claude Code, Codex, Cursor, Cline, OpenCode, OpenClaw và các tool tương thích khác
-- Định tuyến provider, model alias, xoay vòng nhiều tài khoản và fallback
-- Chuyển đổi định dạng OpenAI, Claude, Gemini, Responses API và các định dạng riêng của provider
-- Quản lý OAuth/API key, tự refresh token và theo dõi quota
-- Usage, request details, cached tokens và ước tính chi phí
-- RTK nén tool output, Headroom nén context tùy chọn, Caveman và Ponytail prompts
-- Hỗ trợ tùy chọn Cloudflare Tunnel, Tailscale, MITM và outbound proxy
+Editor, CLI và coding agent sử dụng các API khác nhau. Provider có model, quota, credentials và response format khác nhau. XProxy nằm ở giữa để mọi tool dùng một endpoint, còn bạn kiểm soát route.
 
-## Yêu cầu
+```text
+ Claude Code   Codex   Cursor   Cline   OpenCode   OpenClaw
+      \          |       |       |        |          /
+       \         |       |       |        |         /
+        └──────────── XProxy : PORT /v1 ───────────┘
+                         │
+       ┌─────────────────┼──────────────────┐
+       │                 │                  │
+  Translation       Token Saver        Routing
+  OpenAI/Claude/    RTK/Headroom/      accounts, aliases,
+  Gemini/Responses  Caveman/Ponytail   fallbacks, quotas
+       │                 │                  │
+       └─────────────────┴──────────────────┘
+                         │
+             AI providers và local gateways
+```
 
-- Node.js 22.5.0 trở lên
-- npm
+| Kết nối một lần | Luôn tiếp tục làm việc | Biết chính xác điều gì xảy ra |
+| --- | --- | --- |
+| Dùng một OpenAI-compatible base URL cho các tool tương thích. | Xoay vòng account và fallback khi provider hoặc quota không khả dụng. | Xem request, token usage, cache read, chi phí và provider health. |
 
-## Chạy từ source
+## Dành Cho Agent Traffic Thực Tế
+
+### Định tuyến mà không đổi workflow
+
+- Kết nối OAuth và API-key provider trên dashboard.
+- Dùng model alias và định danh `provider/model` qua một endpoint.
+- Xoay nhiều account và áp dụng model-combo fallback.
+- Cấu hình Claude Code, Codex, Cursor, Cline, OpenCode, OpenClaw và các client tương thích trong **Dashboard > CLI Tools**.
+
+### Chuyển đổi tại edge
+
+- OpenAI Chat Completions, OpenAI Responses, Claude, Gemini và provider-native formats.
+- Streaming và non-streaming response.
+- Tool call, reasoning, image, embedding, TTS, STT, search và các capability riêng của provider khi được hỗ trợ.
+
+### Vận hành local
+
+- Dashboard quản lý provider, API key, usage, request details, pricing, tunnel và diagnostics.
+- OAuth refresh, quota tracking, provider health check và outbound proxy.
+- Tùy chọn Cloudflare Tunnel, Tailscale, MITM và Headroom.
+
+<p align="center">
+  <img src="./images/xproxy-endpoint.webp" alt="Dashboard endpoint và API key của XProxy" width="49%" />
+  <img src="./images/xproxy-token-saver.webp" alt="Dashboard Token Saver của XProxy" width="49%" />
+</p>
+
+## Bắt Đầu
+
+**Yêu cầu Node.js 22.5.0 trở lên.**
+
+### Chạy từ source
 
 ```bash
-git clone https://github.com/chieudoo/xproxy.git xproxy
+git clone https://github.com/chieudoo/xproxy.git
 cd xproxy
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-Đặt `PORT` trong `.env` trước khi khởi động. Cấu hình local mặc định dùng:
+Đặt port bạn muốn trong `.env`:
 
 ```env
 PORT=20127
 ```
 
-Mở dashboard tại `http://localhost:20127/dashboard`; API ở `http://localhost:20127/v1`.
+Sau đó mở:
 
-Chạy production:
+```text
+Dashboard  http://localhost:<PORT>/dashboard
+API        http://localhost:<PORT>/v1
+```
+
+### Kết nối tool đầu tiên
+
+1. Mở **Dashboard > Providers** và kết nối provider upstream.
+2. Mở **Dashboard > Endpoint & Key** để tạo API key.
+3. Trỏ client của bạn tới XProxy:
+
+```text
+Base URL  http://localhost:<PORT>/v1
+API Key   API key của XProxy
+Model     provider/model
+```
+
+Dashboard tạo hướng dẫn cụ thể cho từng tool trong **CLI Tools**.
+
+### Production
 
 ```bash
 npm run build
 npm run start
 ```
 
-## Docker
-
-Docker image phát hành hiện vẫn là `chieudoo/9router`.
-
-```bash
-docker run -d --name xproxy \
-  -p 20127:20127 \
-  -v xproxy-data:/app/data \
-  -e PORT=20127 \
-  chieudoo/9router:latest
-```
-
-Xem [DOCKER.md](./DOCKER.md) để dùng Docker Compose và cấu hình persistent storage.
-
-## Thiết lập nhanh
-
-1. Mở **Dashboard > Providers** và kết nối provider upstream.
-2. Mở **Dashboard > Endpoint & Key** để tạo hoặc sao chép API key.
-3. Cấu hình tool của bạn:
-
-```text
-Base URL: http://localhost:20127/v1
-API key:  API key của XProxy
-Model:    provider/model
-```
-
-Hướng dẫn cụ thể cho từng tool có trong **Dashboard > CLI Tools**.
+Xem [DOCKER.md](./DOCKER.md) cho container và persistent data.
 
 ## Token Saver
 
-XProxy áp dụng các cơ chế Token Saver đang bật lên request cuối cùng gửi tới upstream:
+Token Saver thay đổi request cuối cùng gửi lên upstream, không thay đổi cấu hình client của bạn.
 
-- **RTK** nén tool output có cấu trúc và kích thước lớn, như git diff, grep, danh sách thư mục, build output và log lặp lại.
-- **Headroom** tùy chọn gửi message history tới dịch vụ `/v1/compress` đã cấu hình. Nếu dịch vụ lỗi, request gốc vẫn được gửi đi.
-- **Caveman** chèn system instruction để model trả lời ngắn gọn.
-- **Ponytail** chèn system instruction hướng model tới giải pháp tối giản.
+| Cơ chế | Hoạt động | Mặc định |
+| --- | --- | --- |
+| **RTK** | Nén tool output có cấu trúc và lớn: diff, grep, tree, build output, log lặp lại. | Bật |
+| **Headroom** | Gửi history tới dịch vụ `/v1/compress` đã cấu hình. Request gốc vẫn chạy nếu dịch vụ lỗi. | Tắt |
+| **Caveman** | Append system instruction để model trả lời ngắn gọn. | Tắt |
+| **Ponytail** | Append system instruction hướng model tới code tối giản. | Tắt |
 
-Tắt toàn bộ Token Saver cho một request bằng header:
+Tắt toàn bộ Token Saver cho một request:
 
 ```http
 x-xproxy-token-saver: off
 ```
 
-## Request Logs Và Quyền Riêng Tư
+RTK chỉ hoạt động khi tìm thấy tool result có thể nén. Ponytail và Caveman xuất hiện trong upstream payload cuối cùng, không có trong raw client request.
 
-`ENABLE_REQUEST_LOGS=true` ghi request/response chi tiết vào `logs/` và bật lưu Request Details trên dashboard. Log có thể chứa prompt, response, cookie và API credentials. Chỉ bật khi debug, bảo vệ hoặc xóa các file log sau khi dùng.
+## Cấu Hình
 
-## Cấu hình
-
-Sao chép `.env.example` thành `.env`. Các biến hay dùng:
+Sao chép `.env.example` thành `.env`. Các biến quan trọng:
 
 | Biến | Mục đích |
 | --- | --- |
-| `PORT` | HTTP port cho dashboard và API |
+| `PORT` | Port cho dashboard và OpenAI-compatible API |
 | `DATA_DIR` | Thư mục database và application data |
-| `ENABLE_REQUEST_LOGS` | Bật log request/response chi tiết ở local |
-| `LOG_LEVEL` | Mức log console: `debug`, `info`, `warn`, hoặc `error` |
 | `HOSTNAME` | Host bind cho production server |
+| `LOG_LEVEL` | Mức log console: `debug`, `info`, `warn`, hoặc `error` |
+| `ENABLE_REQUEST_LOGS` | Ghi request/response chi tiết và bật request details |
+| `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` | Outbound proxy tùy chọn cho provider request |
 
-## Phát triển
+## Observability Và Quyền Riêng Tư
+
+Usage dashboard theo dõi request, input/output tokens, cached tokens, tổng theo provider/model và chi phí ước tính.
+
+Chỉ đặt `ENABLE_REQUEST_LOGS=true` khi debug. Nó ghi request/response đầy đủ vào `logs/`, có thể chứa prompt, response, cookie và API credentials. Hãy bảo vệ hoặc xóa các file này sau khi dùng.
+
+## Phát Triển
 
 ```bash
 npm run dev
