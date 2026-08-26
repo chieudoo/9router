@@ -4,6 +4,7 @@ import REGISTRY from "../providers/registry/index.js";
 import { PROVIDER_MODELS } from "../providers/index.js";
 import { modelQuotaFamily, modelStrip, modelTargetFormat, modelSupportedFormats, normalizeModelId } from "../providers/models/schema.js";
 import { CODEX_REVIEW_SUFFIX } from "../providers/models/helpers.js";
+import { PROVIDER_MODEL_TARGET_FORMATS } from "./modelTargetFormats.js";
 export { PROVIDER_MODELS };
 
 
@@ -49,6 +50,8 @@ export function findModelName(aliasOrId, modelId) {
 }
 
 export function getModelTargetFormat(aliasOrId, modelId) {
+  const configuredFormat = PROVIDER_MODEL_TARGET_FORMATS[aliasOrId]?.[modelId];
+  if (configuredFormat) return configuredFormat;
   const models = PROVIDER_MODELS[aliasOrId];
   if (!models) return null;
   return modelTargetFormat(findModel(models, modelId, aliasOrId));

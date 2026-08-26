@@ -3,6 +3,8 @@ import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
+import { getModelTargetFormat } from "../config/providerModels.js";
+import { FORMATS } from "../translator/formats.js";
 
 const OPENCODE_UA = "opencode";
 const MESSAGES_MODELS = new Set();
@@ -41,8 +43,17 @@ export class OpenCodeExecutor extends BaseExecutor {
     return injectReasoningContent({ provider: this.provider, model, body });
   }
 
-  buildUrl(model) {
+  buildUrl(model, stream) {
     const base = this.config.baseUrl;
+    const targetFormat = getModelTargetFormat("oc", model);
+    if (targetFormat === FORMATS.OPENAI_RESPONSES) {
+      return `${base}/zen/v1/responses`;
+    }
+    if (targetFormat === FORMATS.CLAUDE) return `${base}/zen/v1/messages`;
+    if (targetFormat === FORMATS.GEMINI) {
+      const action = stream ? "streamGenerateContent?alt=sse" : "generateContent";
+      return `${base}/zen/v1/models/${model}:${action}`;
+    }
     return MESSAGES_MODELS.has(model)
       ? `${base}/zen/v1/messages`
       : `${base}/zen/v1/chat/completions`;
