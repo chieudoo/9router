@@ -61,6 +61,8 @@ const AUTO_PING_SETTINGS_KEYS = {
   codex: "codexAutoPing",
 };
 
+const FILTERS_STORAGE_KEY = "quotaFilters";
+
 const AUTO_PING_TOOLTIPS = {
   claude: "When your 5h quota runs out, auto-sends a request the moment it resets so a new window starts right away.",
   codex: "Auto-starts the next 5h Codex window after reset by sending a tiny gpt-5.5 request. Consumes a small amount of quota.",
@@ -146,12 +148,13 @@ export default function ProviderLimits() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [proxyPools, setProxyPools] = useState([]);
-  const [providerFilter, setProviderFilter] = useState("all");
+  const [providerFilter, setProviderFilter] = useState("codex");
   const [providerOptions, setProviderOptions] = useState([]);
   const [accountFilter, setAccountFilter] = useState("all");
   const [quotaSortMode, setQuotaSortMode] = useState("default");
   const [quotaVisibility, setQuotaVisibility] = useState({});
   const [expiringFirst, setExpiringFirst] = useState(false);
+  const [hasHydratedFilters, setHasHydratedFilters] = useState(false);
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
   const [page, setPage] = useState(1);
@@ -173,6 +176,36 @@ export default function ProviderLimits() {
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
   const tickCountRef = useRef(0);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY));
+      if (typeof stored?.provider === "string") setProviderFilter(stored.provider);
+      if (ACCOUNT_FILTER_OPTIONS.some(({ value }) => value === stored?.account)) {
+        setAccountFilter(stored.account);
+      }
+      if (QUOTA_SORT_OPTIONS.some(({ value }) => value === stored?.quotaSort)) {
+        setQuotaSortMode(stored.quotaSort);
+      }
+      if (typeof stored?.expiringFirst === "boolean") {
+        setExpiringFirst(stored.expiringFirst);
+      }
+    } catch {
+      localStorage.removeItem(FILTERS_STORAGE_KEY);
+    } finally {
+      setHasHydratedFilters(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedFilters) return;
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify({
+      provider: providerFilter,
+      account: accountFilter,
+      quotaSort: quotaSortMode,
+      expiringFirst,
+    }));
+  }, [accountFilter, expiringFirst, hasHydratedFilters, providerFilter, quotaSortMode]);
 
   const fetchConnections = useCallback(
     async (targetPage = page) => {
@@ -504,6 +537,7 @@ export default function ProviderLimits() {
   }, [refreshingAll, fetchConnections, fetchQuota, page]);
 
   useEffect(() => {
+    if (!hasHydratedFilters) return;
     const initializeData = async () => {
       setConnectionsLoading(true);
       const visibleConnections = await fetchConnections(page);
@@ -525,7 +559,7 @@ export default function ProviderLimits() {
     };
 
     initializeData();
-  }, [fetchConnections, fetchQuota, page]);
+  }, [fetchConnections, fetchQuota, hasHydratedFilters, page]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -643,7 +677,7 @@ export default function ProviderLimits() {
 
     // Main refresh interval
     intervalRef.current = setInterval(() => {
-      refreshAll();
+      refreshAll(true);
     }, REFRESH_INTERVAL_MS);
 
     // Countdown interval
@@ -673,8 +707,12 @@ export default function ProviderLimits() {
           countdownRef.current = null;
         }
       } else if (autoRefresh && hasHydratedAutoRefresh) {
-        // Resume auto-refresh when tab becomes visible
-        intervalRef.current = setInterval(() => refreshAll(), REFRESH_INTERVAL_MS);
+        // Refresh immediately after a hidden tab resumes, then restart the timers.
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        refreshAll(true);
+        setCountdown(60);
+        intervalRef.current = setInterval(() => refreshAll(true), REFRESH_INTERVAL_MS);
         countdownRef.current = setInterval(() => {
           setCountdown((prev) => (prev <= 1 ? 60 : prev - 1));
         }, 1000);
@@ -747,8 +785,6 @@ export default function ProviderLimits() {
     bulkSetActive(ids, true);
   };
 
-  const selectedProviderLabel =
-    providerFilter === "all" ? "All providers" : providerFilter;
   const hasEligibleConnections = totals.eligibleConnections > 0;
   const hasVisibleConnections = sortedConnections.length > 0;
   const emptyState = getConnectionsEmptyMessage(
@@ -801,88 +837,45 @@ export default function ProviderLimits() {
           <div className="relative">
             <button
               type="button"
-              onClick={() => setProviderMenuOpen((prev) => !prev)}
-              className="flex h-8 items-center justify-between gap-1 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-              aria-haspopup="menu"
+              onClick={() => setProviderMenuOpen((open) => !open)}
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs capitalize text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
+              aria-haspopup="listbox"
               aria-expanded={providerMenuOpen}
-              title="Filter quota providers"
             >
-              <span className="flex min-w-0 items-center gap-1.5">
-                {providerFilter === "all" ? (
-                  <Icon name="apps" className="text-[14px] text-text-muted" />
-                ) : (
-                  <ProviderIcon
-                    src={`/providers/${providerFilter}.png`}
-                    alt={providerFilter}
-                    size={18}
-                    className="size-[18px] rounded object-contain"
-                    fallbackText={providerFilter.slice(0, 2).toUpperCase()}
-                  />
-                )}
-                <span className="truncate capitalize hidden lg:inline">
-                  {selectedProviderLabel}
-                </span>
-              </span>
+              {providerFilter === "all" ? (
+                <Icon name="apps" className="text-[16px] text-text-muted" />
+              ) : (
+                <ProviderIcon providerId={providerFilter} alt="" size={16} className="size-4 rounded object-contain" fallbackText={providerFilter.slice(0, 2).toUpperCase()} />
+              )}
+              {providerFilter === "all" ? "All providers" : providerFilter}
               <Icon name="expand_more" className="text-[14px] text-text-muted" />
             </button>
-
             {providerMenuOpen && (
               <>
-                <button
-                  type="button"
-                  className="fixed inset-0 z-30 bg-transparent"
-                  aria-label="Close provider filter"
-                  onClick={() => setProviderMenuOpen(false)}
-                />
-                <div className="absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-2xl border border-black/10 bg-surface/95 p-1.5 shadow-xl shadow-black/10 backdrop-blur dark:border-white/10 dark:bg-surface/95 sm:w-72">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (shouldResetPage(providerFilter, "all")) {
-                        setPage(1);
-                      }
-                      setProviderFilter("all");
-                      setProviderMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === "all" ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
-                  >
-                    <Icon name="apps" className="text-[22px]" />
-                    <span className="font-medium">All providers</span>
-                    {providerFilter === "all" && (
-                      <Icon name="check" className="ml-auto text-[20px]" />
-                    )}
-                  </button>
-                  <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
-                  <div className="max-h-72 overflow-y-auto pr-1">
-                    {providerOptions.map((provider) => (
-                      <button
-                        key={provider}
-                        type="button"
-                        onClick={() => {
-                          if (shouldResetPage(providerFilter, provider)) {
-                            setPage(1);
-                          }
-                          setProviderFilter(provider);
-                          setProviderMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === provider ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
-                      >
-                        <ProviderIcon
-                          src={`/providers/${provider}.png`}
-                          alt={provider}
-                          size={24}
-                          className="size-6 rounded-md object-contain"
-                          fallbackText={provider.slice(0, 2).toUpperCase()}
-                        />
-                        <span className="font-medium capitalize">
-                          {provider}
-                        </span>
-                        {providerFilter === provider && (
-                          <Icon name="check" className="ml-auto text-[20px]" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                <button type="button" className="fixed inset-0 z-30" aria-label="Close provider filter" onClick={() => setProviderMenuOpen(false)} />
+                <div role="listbox" aria-label="Filter quota providers" className="absolute left-0 z-40 mt-1 max-h-72 min-w-52 overflow-y-auto rounded-lg border border-black/10 bg-surface p-1 shadow-lg dark:border-white/10">
+                  {["all", ...providerOptions].map((provider) => (
+                    <button
+                      key={provider}
+                      type="button"
+                      role="option"
+                      aria-selected={providerFilter === provider}
+                      onClick={() => {
+                        if (shouldResetPage(providerFilter, provider)) setPage(1);
+                        setProviderFilter(provider);
+                        setProviderMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs capitalize ${providerFilter === provider ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
+                    >
+                      {provider === "all" ? (
+                        <Icon name="apps" className="text-[18px]" />
+                      ) : (
+                        <ProviderIcon providerId={provider} alt="" size={18} className="size-[18px] rounded object-contain" fallbackText={provider.slice(0, 2).toUpperCase()} />
+                      )}
+                      <span className="flex-1">{provider === "all" ? "All providers" : provider}</span>
+                      {providerFilter === provider && <Icon name="check" className="text-[16px]" />}
+                    </button>
+                  ))}
                 </div>
               </>
             )}
