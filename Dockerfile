@@ -35,6 +35,8 @@ COPY --from=builder /app/src/mitm ./src/mitm
 COPY --from=builder /app/node_modules/node-forge ./node_modules/node-forge
 # Ensure `next` is available at runtime in case tracing did not include it.
 COPY --from=builder /app/node_modules/next ./node_modules/next
+# node-machine-id is createRequire-loaded at runtime; tracing omits it.
+COPY --from=builder /app/node_modules/node-machine-id ./node_modules/node-machine-id
 RUN mkdir -p /app/data && chown -R node:node /app && \
   mkdir -p /app/data-home && chown node:node /app/data-home && \
   ln -sf /app/data-home /root/.xproxy 2>/dev/null || true

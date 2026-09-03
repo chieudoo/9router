@@ -1,6 +1,6 @@
 {
   "name": "xproxy-app",
-  "version": "0.5.55",
+  "version": "0.5.65",
   "description": "XProxy web dashboard",
   "private": true,
   "engines": {
