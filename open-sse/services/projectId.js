@@ -158,19 +158,8 @@ export function removeConnection(connectionId) {
 async function fetchProjectId(accessToken, signal, provider) {
     const endpoints = CLOUD_CODE_API[provider] || CLOUD_CODE_API["gemini-cli"];
     const headers = provider === "antigravity" ? ANTIGRAVITY_LOAD_CODE_ASSIST_HEADERS : LOAD_CODE_ASSIST_HEADERS;
-    const response = await fetch(endpoints.loadCodeAssist, {
-        method: "POST",
-        headers: { ...headers, "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify({ metadata: LOAD_CODE_ASSIST_METADATA }),
-        signal
-    });
+    const data = await loadCodeAssist(accessToken, signal, endpoints, headers);
 
-    if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        throw new Error(`loadCodeAssist failed: HTTP ${response.status} ${errorText.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
     const projectId = extractProjectId(data);
     if (projectId) return projectId;
 
@@ -190,6 +179,22 @@ async function fetchProjectId(accessToken, signal, provider) {
     return onboardUser(accessToken, tierID, signal, endpoints, provider);
 }
 
+async function loadCodeAssist(accessToken, signal, endpoints, headers) {
+    const response = await fetch(endpoints.loadCodeAssist, {
+        method: "POST",
+        headers: { ...headers, "Authorization": `Bearer ${accessToken}` },
+        body: JSON.stringify({ metadata: LOAD_CODE_ASSIST_METADATA }),
+        signal
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(`loadCodeAssist failed: HTTP ${response.status} ${errorText.slice(0, 200)}`);
+    }
+
+    return response.json();
+}
+
 /**
  * Fetch project ID via onboardUser endpoint (polls until done).
  *
@@ -204,6 +209,7 @@ async function onboardUser(accessToken, tierID, externalSignal, endpoints, provi
     const reqBody = { tierId: tierID, metadata: LOAD_CODE_ASSIST_METADATA };
     const headers = provider === "antigravity" ? ANTIGRAVITY_LOAD_CODE_ASSIST_HEADERS : LOAD_CODE_ASSIST_HEADERS;
     const MAX_ATTEMPTS = 5;
+    let onboardingDone = false;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         // Bail out immediately if the connection was removed
@@ -216,14 +222,24 @@ async function onboardUser(accessToken, tierID, externalSignal, endpoints, provi
         externalSignal?.addEventListener("abort", forwardAbort);
 
         try {
+            if (onboardingDone) {
+                const loadData = await loadCodeAssist(accessToken, localCtrl.signal, endpoints, headers);
+                const projectId = extractProjectId(loadData);
+                if (projectId) {
+                    console.log(`[ProjectId] Successfully loaded project after onboarding: ${projectId}`);
+                    return projectId;
+                }
+                console.log(`[ProjectId] Project provisioning attempt ${attempt}/${MAX_ATTEMPTS}: pending, waiting...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                continue;
+            }
+
             const response = await fetch(endpoints.onboardUser, {
                 method: "POST",
                 headers: { ...headers, "Authorization": `Bearer ${accessToken}` },
                 body: JSON.stringify(reqBody),
                 signal: localCtrl.signal
             });
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorText = await response.text().catch(() => "");
@@ -233,16 +249,25 @@ async function onboardUser(accessToken, tierID, externalSignal, endpoints, provi
             const data = await response.json();
 
             if (data.done === true) {
+                onboardingDone = true;
                 const projectId = extractProjectIdFromOnboard(data);
                 if (projectId) {
                     console.log(`[ProjectId] Successfully onboarded, project ID: ${projectId}`);
                     return projectId;
                 }
-                throw new Error("onboardUser done but no project_id in response");
+
+                // Completion and project visibility are eventually consistent.
+                // Poll loadCodeAssist, which is the authoritative project source.
+                const loadData = await loadCodeAssist(accessToken, localCtrl.signal, endpoints, headers);
+                const loadedProjectId = extractProjectId(loadData);
+                if (loadedProjectId) {
+                    console.log(`[ProjectId] Successfully loaded project after onboarding: ${loadedProjectId}`);
+                    return loadedProjectId;
+                }
             }
 
-            // Server not done yet – wait and retry
-            console.log(`[ProjectId] Onboard attempt ${attempt}/${MAX_ATTEMPTS}: not done yet, waiting...`);
+            // Onboarding or subsequent project provisioning is still pending.
+            console.log(`[ProjectId] Onboard attempt ${attempt}/${MAX_ATTEMPTS}: project pending, waiting...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
 
         } catch (error) {

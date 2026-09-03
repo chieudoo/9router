@@ -176,6 +176,8 @@ export default function ProviderLimits() {
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
   const tickCountRef = useRef(0);
+  const lastRefreshAtRef = useRef(Date.now());
+  const refreshingAllRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -247,7 +249,7 @@ export default function ProviderLimits() {
         return [];
       }
     },
-    [accountFilter, expiringFirst, page, pageSize, providerFilter],
+    [accountFilter, page, pageSize, providerFilter],
   );
 
   // Fetch quota for a specific connection
@@ -500,8 +502,10 @@ export default function ProviderLimits() {
   }, []);
 
   const refreshAll = useCallback(async (force = false) => {
-    if (refreshingAll) return;
+    if (refreshingAllRef.current) return;
 
+    refreshingAllRef.current = true;
+    lastRefreshAtRef.current = Date.now();
     setRefreshingAll(true);
     setCountdown(60);
 
@@ -532,9 +536,10 @@ export default function ProviderLimits() {
     } catch (error) {
       console.error("Error refreshing all providers:", error);
     } finally {
+      refreshingAllRef.current = false;
       setRefreshingAll(false);
     }
-  }, [refreshingAll, fetchConnections, fetchQuota, page]);
+  }, [fetchConnections, fetchQuota, page]);
 
   useEffect(() => {
     if (!hasHydratedFilters) return;
@@ -555,6 +560,7 @@ export default function ProviderLimits() {
       await Promise.all(
         visibleConnections.map((conn) => fetchQuota(conn.id, conn.provider)),
       );
+      lastRefreshAtRef.current = Date.now();
       setLastUpdated(new Date());
     };
 
@@ -707,12 +713,23 @@ export default function ProviderLimits() {
           countdownRef.current = null;
         }
       } else if (autoRefresh && hasHydratedAutoRefresh) {
-        // Refresh immediately after a hidden tab resumes, then restart the timers.
+        // Preserve the current cycle when a hidden tab resumes. Only refresh if
+        // the regular interval actually elapsed while the tab was hidden.
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (countdownRef.current) clearInterval(countdownRef.current);
-        refreshAll(true);
-        setCountdown(60);
-        intervalRef.current = setInterval(() => refreshAll(true), REFRESH_INTERVAL_MS);
+        const elapsed = Date.now() - lastRefreshAtRef.current;
+        const remaining = Math.max(0, REFRESH_INTERVAL_MS - elapsed);
+        if (remaining === 0) {
+          refreshAll(true);
+          setCountdown(60);
+          intervalRef.current = setInterval(() => refreshAll(true), REFRESH_INTERVAL_MS);
+        } else {
+          setCountdown(Math.ceil(remaining / 1000));
+          intervalRef.current = setTimeout(() => {
+            refreshAll(true);
+            intervalRef.current = setInterval(() => refreshAll(true), REFRESH_INTERVAL_MS);
+          }, remaining);
+        }
         countdownRef.current = setInterval(() => {
           setCountdown((prev) => (prev <= 1 ? 60 : prev - 1));
         }, 1000);

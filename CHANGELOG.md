@@ -2,8 +2,8 @@
 
 ## Features
 - **Quota**: default the dashboard to Codex, replace the provider selector with
-  an icon-aware dropdown, persist filters between sessions, and refresh usage
-  immediately when the tab becomes visible again without overlapping timers
+  an icon-aware dropdown, persist filters between sessions, and resume the
+  refresh countdown when returning to the tab without duplicate quota requests
 - **Gemini / Antigravity**: add Gemini 3.8 Flash support and update the IDE
   fingerprint to 2.11.0
 - **Claude**: add Claude Fable 5.1 with adaptive-thinking support and update the
@@ -25,7 +25,8 @@
 - **Kiro MITM**: support inline image MIME types when converting user input
   messages
 - **Antigravity**: refresh quota headers, retry behavior, model pricing, and
-  Gemini 3.8 tier metadata
+  Gemini 3.8 tier metadata; poll `loadCodeAssist` after onboarding until the
+  provisioned project ID becomes visible
 - **Security**: harden SSRF URL validation and normalize trusted dashboard
   rewrite handling
 - **UI**: apply the persisted theme before first paint to prevent a light-theme
