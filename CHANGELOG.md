@@ -1,3 +1,40 @@
+# v0.5.65 (2026-09-03)
+
+## Features
+- **Quota**: default the dashboard to Codex, replace the provider selector with
+  an icon-aware dropdown, persist filters between sessions, and refresh usage
+  immediately when the tab becomes visible again without overlapping timers
+- **Gemini / Antigravity**: add Gemini 3.8 Flash support and update the IDE
+  fingerprint to 2.11.0
+- **Claude**: add Claude Fable 5.1 with adaptive-thinking support and update the
+  Claude Code fingerprint for new-model access
+- **OpenCode**: add Muse Spark 1.2 and 1.3 free models with Responses API
+  routing, vision, reasoning, and model capability metadata
+- **Models**: allow vision and reasoning capabilities to be configured when
+  adding custom models, with upsert support and live capability refresh
+- **Providers**: refresh Codebuddy-CN and TokenRouter model catalogs and add a
+  scrollable connection list for providers with many accounts
+- **i18n**: complete the Indonesian translation and update Simplified Chinese
+  literals
+
+## Fixes
+- **Thinking**: preserve provider-native thinking formats while translating to
+  OpenAI-compatible wire formats, and improve Claude/Gemini thinking handling
+- **Claude**: preserve cache-token accounting, cloaked tool calls, and forwarded
+  beta headers across request and response translation
+- **Kiro MITM**: support inline image MIME types when converting user input
+  messages
+- **Antigravity**: refresh quota headers, retry behavior, model pricing, and
+  Gemini 3.8 tier metadata
+- **Security**: harden SSRF URL validation and normalize trusted dashboard
+  rewrite handling
+- **UI**: apply the persisted theme before first paint to prevent a light-theme
+  flash during reload
+
+## Maintenance
+- **Tests**: remove the legacy test suite and its obsolete fixtures, snapshots,
+  and Vitest configuration
+
 # v0.5.55 (2026-08-14)
 
 ## Features
