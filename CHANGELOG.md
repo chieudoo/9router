@@ -30,6 +30,10 @@
   rewrite handling
 - **UI**: apply the persisted theme before first paint to prevent a light-theme
   flash during reload
+- **Changelog**: load release notes from the bundled local `CHANGELOG.md`
+  instead of fetching the GitHub raw file
+- **Ponytail**: align the compact prompt with the latest upstream rules for
+  codebase reuse, end-to-end tracing, root-cause fixes, and coding-task scope
 
 ## Maintenance
 - **Tests**: remove the legacy test suite and its obsolete fixtures, snapshots,

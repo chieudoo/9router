@@ -7,11 +7,6 @@ export const APP_CONFIG = {
   version: pkg.version,
 };
 
-// GitHub configuration
-export const GITHUB_CONFIG = {
-  changelogUrl: "https://raw.githubusercontent.com/chieudoo/xproxy/refs/heads/master/CHANGELOG.md",
-};
-
 // Updater configuration
 export const UPDATER_CONFIG = {
   npmPackageName: "xproxy",
