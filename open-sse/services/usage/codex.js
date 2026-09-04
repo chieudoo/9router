@@ -80,15 +80,18 @@ function getCodexReviewRateLimit(data) {
   }) || null;
 }
 
-export async function getCodexUsage(accessToken, proxyOptions = null) {
+export async function getCodexUsage(accessToken, proxyOptions = null, providerSpecificData = null) {
   try {
-    const response = await proxyAwareFetch(CODEX_CONFIG.usageUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Accept": "application/json",
-      },
-    }, proxyOptions);
+    const [response, resetCredits] = await Promise.all([
+      proxyAwareFetch(CODEX_CONFIG.usageUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Accept": "application/json",
+        },
+      }, proxyOptions),
+      getCodexRateLimitResetCredits(accessToken, proxyOptions, providerSpecificData).catch(() => null),
+    ]);
 
     if (!response.ok) {
       return { message: `Codex connected. Usage API temporarily unavailable (${response.status}).` };
@@ -97,7 +100,6 @@ export async function getCodexUsage(accessToken, proxyOptions = null) {
     const data = await response.json();
     const normalRateLimit = data.rate_limit || data.rate_limits || data.rate_limits_by_limit_id?.codex || {};
     const reviewRateLimit = getCodexReviewRateLimit(data);
-    const availableResetCredits = Math.max(0, toFiniteNumber(data.rate_limit_reset_credits?.available_count, 0));
     const quotas = {};
 
     appendCodexQuotaWindows(quotas, "", normalRateLimit);
@@ -107,7 +109,7 @@ export async function getCodexUsage(accessToken, proxyOptions = null) {
       plan: data.plan_type || data.summary?.plan || "unknown",
       limitReached: getCodexRateLimitBody(normalRateLimit)?.limit_reached || false,
       reviewLimitReached: getCodexRateLimitBody(reviewRateLimit)?.limit_reached || false,
-      resetCredits: { availableCount: availableResetCredits },
+      resetCredits: { availableCount: resetCredits?.availableCount ?? null },
       quotas,
     };
   } catch (error) {
