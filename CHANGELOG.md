@@ -18,6 +18,8 @@
   literals
 
 ## Fixes
+- **Codex**: default unspecified reasoning effort to `medium` and log the final
+  reasoning payload sent upstream
 - **Thinking**: preserve provider-native thinking formats while translating to
   OpenAI-compatible wire formats, and improve Claude/Gemini thinking handling
 - **Claude**: preserve cache-token accounting, cloaked tool calls, and forwarded

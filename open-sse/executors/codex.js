@@ -467,7 +467,7 @@ export class CodexExecutor extends BaseExecutor {
 
     // Priority: explicit reasoning.effort > reasoning_effort param > model suffix > default (medium)
     if (!body.reasoning) {
-      const effort = normalizeReasoningEffort(body.model, body.reasoning_effort || modelEffort || 'low');
+      const effort = normalizeReasoningEffort(body.model, body.reasoning_effort || modelEffort || 'medium');
       body.reasoning = { effort, summary: "auto" };
     } else {
       body.reasoning.effort = normalizeReasoningEffort(body.model, body.reasoning.effort);
@@ -506,6 +506,8 @@ export class CodexExecutor extends BaseExecutor {
     for (const k of Object.keys(body)) {
       if (!RESPONSES_API_ALLOWLIST.has(k)) delete body[k];
     }
+
+    console.log(`[CODEX] reasoning payload ${JSON.stringify({ reasoning: body.reasoning, include: body.include })}`);
 
     return body;
   }
