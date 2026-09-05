@@ -145,6 +145,9 @@ export const PROVIDER_CAPABILITIES = {
     "gpt-5.6-luna":              CODEX_GPT_56_DEFAULT_CAPS,
     "gpt-5.6-luna-review":       CODEX_GPT_56_DEFAULT_CAPS,
   },
+  "cx": {
+    "gpt-6-astra":                 CODEX_GPT_6_ASTRA_CAPS,
+  },
   "kiro": {
     "gpt-5.6-sol": KIRO_GPT_5_6_CAPABILITIES,
     "gpt-5.6-terra": KIRO_GPT_5_6_CAPABILITIES,
