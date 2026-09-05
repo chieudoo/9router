@@ -1,6 +1,7 @@
 # v0.5.65 (2026-09-03)
 
 ## Features
+- **Codex**: add GPT-6 Astra to the available model catalog
 - **Quota**: default the dashboard to Codex, replace the provider selector with
   an icon-aware dropdown, persist filters between sessions, and resume the
   refresh countdown when returning to the tab without duplicate quota requests
