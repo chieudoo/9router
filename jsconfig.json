@@ -6,6 +6,7 @@
       "open-sse/*": ["./open-sse/*"]
     },
     "module": "ESNext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "jsx": "react"
   }
 }
